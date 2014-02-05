@@ -36,9 +36,14 @@ case ${1} in
     ;;
 esac
 if [ "${1}" == "" ]; then
+    # no specified port, show all
+    # "lsof -i" can provide similar result
     netstat -${NFLAG}pna 2>/dev/null
 else
-    netstat -${NFLAG}pna 2>/dev/null | sed -n 2'p'
-    netstat -${NFLAG}pna 2>/dev/null | grep :${1}
-    lsof -i ${LFLAG}:${1}
+    # use lsof
+    lsof -i ${LFLAG}:${1} 
+    # use netstat
+    netstat -${NFLAG}pna 2>/dev/null | sed -n 2'p'  # header
+    netstat -${NFLAG}pna 2>/dev/null | grep :${1}   # record
 fi
+

@@ -1,5 +1,5 @@
 #!/bin/bash
-#File - fgrep.sh
+#File - rgrep.sh
 #Author - Freyr Lin
 #Email - linfan.china@gmail.com
 #Version - v1.0
@@ -9,7 +9,7 @@
 function usage()
 {
     cat << EOUSAGE
-USAGE: fgrep.sh 'string_to_search' ['file_patternr']
+USAGE: rgrep.sh 'string_to_search' ['file_patternr']
 EOUSAGE
 }
 

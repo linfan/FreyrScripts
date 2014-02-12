@@ -13,18 +13,21 @@ Usage: who-use-port [-t|-u|-a] [port]
 EOUSAGE
 }
                                                                                                                                                                                               
-PFLAG="tu"
+NFLAG="tu"
+LFLAG=""
 case ${1} in
     -t )
-    PFLAG="t"
+    NFLAG="t"
+    LFLAG="tcp"
     shift
     ;;
     -u )
-    PFLAG="u"
+    NFLAG="u"
+    LFLAG="udp"
     shift
     ;;
     -a )
-    PFLAG=""
+    NFLAG=""
     shift
     ;;
     -h )
@@ -33,8 +36,14 @@ case ${1} in
     ;;
 esac
 if [ "${1}" == "" ]; then
-    netstat -${PFLAG}pna 2>/dev/null
+    # no specified port, show all
+    # "lsof -i" can provide similar result
+    netstat -${NFLAG}pna 2>/dev/null
 else
-    netstat -${PFLAG}pna 2>/dev/null | sed -n 2'p'
-    netstat -${PFLAG}pna 2>/dev/null | grep :${1}
+    # use lsof
+    lsof -i ${LFLAG}:${1} 
+    # use netstat
+    netstat -${NFLAG}pna 2>/dev/null | sed -n 2'p'  # header
+    netstat -${NFLAG}pna 2>/dev/null | grep :${1}   # record
 fi
+

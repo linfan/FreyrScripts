@@ -1,6 +1,13 @@
-# Provide "flushUserAppFolders" command to add applications sub-folders to corresponding
-# variables (PATH, LD_LIBRARY_PATH, C_INCLUDE_PATH, CPLUS_INCLUDE_PATH, MANPATH).
-# Usage: use "source" command to load this script, then execute "flushUserAppFolders [base_folder]"
+# Provide "flushUserAppFolders" and "getPrefix" command
+# [Usage]:
+# Use "source" command to load this script.
+# [Commands]:
+# 1) flushUserAppFolders
+# Add applications under user app folder to corresponding variables
+# (PATH, LD_LIBRARY_PATH, C_INCLUDE_PATH, CPLUS_INCLUDE_PATH, MANPATH).
+# 2) getPrefix
+# Get prefix parameter for configure or cmake to install application
+# to user app folder.
 
 # export new path to variable if not exist
 # ${1}: variable name
@@ -73,5 +80,18 @@ function flushUserAppFolders()
     export CPLUS_INCLUDE_PATH=`removeItemsByPrefix "${CPLUS_INCLUDE_PATH}" "${base_folder}"`
     export MANPATH=`removeItemsByPrefix "${MANPATH}" "${base_folder}"`
     exportUserPath "${base_folder}"
+}
+
+# return a string like --prefix=${HOME}/app/app-name-version
+# ${1}: use "cmake" if want to get cmake-style prefix parameter
+function getPrefix()
+{
+    app_folder=`pwd`
+    app_folder=${app_folder##*/}
+    if [ "${1}" == "cmake" ]; then
+        echo "-DCMAKE_INSTALL_PREFIX=${HOME}/app/${app_folder}"
+    else
+        echo "--prefix=${HOME}/app/${app_folder}"
+    fi
 }
 

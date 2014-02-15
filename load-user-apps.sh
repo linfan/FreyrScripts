@@ -56,7 +56,11 @@ function exportUserPath()
             exportFolderOnce LD_LIBRARY_PATH ${app_folder}/lib64
             exportFolderOnce C_INCLUDE_PATH ${app_folder}/include
             exportFolderOnce CPLUS_INCLUDE_PATH ${app_folder}/include
-            exportFolderOnce MANPATH ${app_folder}/share/man `manpath`
+            if [ "${MANPATH}" == "" ]; then
+                exportFolderOnce MANPATH ${app_folder}/share/man `manpath`
+            else
+                exportFolderOnce MANPATH ${app_folder}/share/man
+            fi
         fi
     done
 }

@@ -2,15 +2,21 @@
 
 function usage()
 {
-    echo 'Usage: send-file-to.sh [-u <SERVER_USER>] [-f <FOLDER_TO_STORE>] [-p <SERVER_PORT>] [-n] <SERVER_NAME> FILE1 [FILE2 ..]'
+    cat << EOUSAGE
+Usage: send-file-to.sh [-u <SERVER_USER>] [-f <FOLDER_TO_STORE>] [-p <SERVER_PORT>] [-n] <SERVER_NAME> FILE1 [FILE2 ..]
+       -u specify server user
+       -p specify server port
+       -f specify server folder to store files
+       -d delete files of same name on server before transfer
+EOUSAGE
 }
 
 IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh" # Name-to-ip mapping file
 SERVER_USER=`whoami`
-DELETE_BEFORE_CP=1
 SERVER_PORT="22"
 TARGET_PATH=""
 declare -i TARGET_PATH_SET=0
+declare -i DELETE_BEFORE_CP=1
 
 while getopts ":f:u:p:n" opt
 do

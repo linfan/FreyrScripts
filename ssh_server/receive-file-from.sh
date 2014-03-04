@@ -2,7 +2,13 @@
 
 function usage()
 {
-    echo 'Usage: receive-file-from.sh [-u <SERVER_USER>] [-f <FOLDER_TO_STORE>] [-p <PORT_NUM>] <SERVER_NAME> FILE1 [FILE2 ..]'
+    cat << EOUSAGE
+Usage: receive-file-from.sh [-u <SERVER_USER>] [-f <FOLDER_TO_STORE>] [-p <PORT_NUM>] [-d] <SERVER_NAME> FILE1 [FILE2 ..]
+       -u specify server user
+       -p specify server port
+       -f specify local folder to receive files
+       -d delete files on server after transfer finish
+EOUSAGE
 }
 
 IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh" # Name-to-ip mapping file
@@ -10,8 +16,9 @@ SERVER_USER=`whoami`
 PORT_NUM="22"
 TARGET_PATH=""
 declare -i TARGET_PATH_SET=0
+declare -i DELETE_AFTER_CP=0
 
-while getopts ":f:u:p:" opt
+while getopts ":f:u:p:d" opt
 do
     case ${opt} in
         f ) TARGET_PATH="${OPTARG}"
@@ -20,6 +27,8 @@ do
         u ) SERVER_USER="${OPTARG}"
             ;;
         p ) PORT_NUM="${OPTARG}"
+            ;;
+        d ) DELETE_AFTER_CP=1
             ;;
         ? ) usage
             exit 1
@@ -47,10 +56,16 @@ if [ ${#} -eq 0 ]; then
     exit -1
 fi
 
+FILE_DEL_LIST=""
 FILE_LIST=""
 for FILE in $@; do
+    FILE_DEL_LIST="${FILE} ${FILE_DEL_LIST}"
     FILE_LIST="${SERVER_USER}@${SERVER_IP}:${FILE} ${FILE_LIST}"
 done
 echo "Receiving files from server ${SERVER_NAME} .."
 scp -P ${PORT_NUM} ${FILE_LIST} ${TARGET_PATH}
+if [ ${DELETE_AFTER_CP} -eq 1 ]; then
+    echo "Deleting files after received.. ${FILE_DEL_LIST}"
+    ssh -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_IP} "rm -f ${FILE_DEL_LIST}"
+fi
 

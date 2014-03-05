@@ -6,7 +6,7 @@ function usage()
 }
 
 IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh" # Name-to-ip mapping file
-SERVER_USER=`whoami`
+SERVER_USER=""
 SERVER_PORT="22"
 
 while getopts ":u:p:" opt
@@ -26,12 +26,19 @@ shift $((${OPTIND} - 1))
 SERVER_NAME=${1}
 shift 1
 
-SERVER_IP=`${IP_MAP_FILE} ${SERVER_NAME}`
-if [ "${SERVER_IP}" = "" ]; then
+# Get server user name and IP
+SERVER_USER_IP=`${IP_MAP_FILE} ${SERVER_NAME}`
+if [ "${SERVER_USER_IP}" = "" ]; then
     echo "Unknown server or wrong parameters."
     usage
     exit 1
 fi
 
-ssh -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_IP}
+# Replace the user name
+if [ "${SERVER_USER}" != "" ]; then
+    SERVER_USER_IP="${SERVER_USER}@${SERVER_USER_IP#*@}"
+fi
+
+# Login to server
+ssh -p ${SERVER_PORT} ${SERVER_USER_IP}
 

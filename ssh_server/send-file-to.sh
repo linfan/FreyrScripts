@@ -3,17 +3,15 @@
 function usage()
 {
     cat << EOUSAGE
-Usage: send-file-to.sh [-u <SERVER_USER>] [-f <FOLDER_TO_STORE>] [-p <SERVER_PORT>] [-n] <SERVER_NAME> FILE1 [FILE2 ..]
-       -u specify server user
-       -p specify server port
+Usage: send-file-to.sh [-f <FOLDER_TO_STORE>] [-n] <SERVER_NAME> FILE1 [FILE2 ..]
        -f specify server folder to store files
-       -d delete files of same name on server before transfer
+       -n don't try remove files of same name on server before transfer
 EOUSAGE
 }
 
-IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh" # Name-to-ip mapping file
-SERVER_USER=""
-SERVER_PORT="22"
+# Name-to-ip mapping file
+IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh"
+
 TARGET_PATH=""
 declare -i DELETE_BEFORE_CP=1
 
@@ -21,10 +19,6 @@ while getopts ":f:u:p:n" opt
 do
     case ${opt} in
         f ) TARGET_PATH="${OPTARG}"
-            ;;
-        u ) SERVER_USER="${OPTARG}"
-            ;;
-        p ) SERVER_PORT="${OPTARG}"
             ;;
         n ) DELETE_BEFORE_CP=0
             ;;
@@ -39,8 +33,8 @@ SERVER_NAME=${1}
 shift 1
 
 # Get server user name and IP
-SERVER_USER_IP=`${IP_MAP_FILE} ${SERVER_NAME}`
-if [ "${SERVER_USER_IP}" = "" ]; then
+SERVER_META=`${IP_MAP_FILE} ${SERVER_NAME}`
+if [ "${SERVER_META}" = "" ]; then
     echo "Unknown server or wrong parameters."
     usage
     exit 1
@@ -52,18 +46,13 @@ if [ ${#} -eq 0 ]; then
     exit -1
 fi
 
-# Replace the user name
-if [ "${SERVER_USER}" != "" ]; then
-    SERVER_USER_IP="${SERVER_USER}@${SERVER_USER_IP#*@}"
-fi
-
 # If TARGET_PATH not specified, set it to user's home folder
 if [ "${TARGET_PATH}" == "" ]; then
-    if [ "${SERVER_USER}" == "" ]; then
-        SERVER_USER="${SERVER_USER_IP%%@*}"
-    fi
+    SERVER_USER="${SERVER_META#*\ }"
+    SERVER_USER="${SERVER_USER%@*}"
     TARGET_PATH="/home/${SERVER_USER}/"
 fi
+
 # If TARGET_PATH is not end with a '/', attach one
 TARGET_PATH="${TARGET_PATH%/}/"
 
@@ -78,10 +67,11 @@ done
 # Delete exist file from server before transfer
 if [ ${DELETE_BEFORE_CP} -eq 1 ]; then
     echo ">> Deleting files before send.. ${FILE_DEL_LIST}"
-    ssh -p ${SERVER_PORT} ${SERVER_USER_IP} "rm -f ${FILE_DEL_LIST}"
+    ssh -p ${SERVER_META} "rm -f ${FILE_DEL_LIST}"
 fi
 
 # Send file to server
+SERVER_PORT="${SERVER_META%%\ *}"
 echo ">> Sending files to server ${SERVER_NAME} .."
-scp -P ${SERVER_PORT} ${FILE_SEND_LIST} ${SERVER_USER_IP}:${TARGET_PATH}
+scp -P ${SERVER_PORT} ${FILE_SEND_LIST} ${SERVER_META#*\ }:${TARGET_PATH}
 

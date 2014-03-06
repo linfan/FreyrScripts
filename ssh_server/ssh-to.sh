@@ -26,7 +26,7 @@ shift 1
 # Get server user name and IP
 SERVER_META=`${IP_MAP_FILE} ${SERVER_NAME}`
 if [ "${SERVER_META}" = "" ]; then
-    echo "Unknown server or wrong parameters."
+    echo "[ERROR] Unknown server or wrong parameters."
     usage
     exit 1
 fi

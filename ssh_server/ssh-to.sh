@@ -10,7 +10,8 @@ EOUSAGE
 }
 
 # Name-to-ip mapping file
-IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh"
+THIS_FOLDER="${0%/*}"
+IP_MAP_FILE="${THIS_FOLDER}/map-name-to-ip.sh"
 
 SERVER_USER=""
 SERVER_PORT=""

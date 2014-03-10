@@ -11,7 +11,8 @@ EOUSAGE
 }
 
 # Name-to-ip mapping file
-IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh"
+THIS_FOLDER="${0%/*}"
+IP_MAP_FILE="${THIS_FOLDER}/map-name-to-ip.sh"
 
 IDENTITY_FILE=`ls ${HOME}/.ssh/id_[rd]sa.pub | head -1`
 SERVER_USER=""

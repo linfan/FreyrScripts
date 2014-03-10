@@ -41,11 +41,11 @@ function ssh-target-add
     # Check result
     RES=`grep "SERVER_${SERVER_NAME}_IP" "${IP_MAP_FILE}" | grep "${SERVER_IP}"`
     if [ "${RES}" == "" ]; then
-        echo "Server add failed!"
+        echo "[Error] Server add failed!"
     elif [ ${EXIST} -eq 1 ]; then
-        echo "Server ${SERVER_NAME} modified => [${SERVER_USER}] ${SERVER_IP} : ${SERVER_PORT} succeeful."
+        echo "[Done] Server ${SERVER_NAME} modified => [${SERVER_USER}] ${SERVER_IP} : ${SERVER_PORT} succeeful."
     else
-        echo "Server ${SERVER_NAME} => [${SERVER_USER}] ${SERVER_IP} : ${SERVER_PORT} added successful."
+        echo "[Done] Server ${SERVER_NAME} => [${SERVER_USER}] ${SERVER_IP} : ${SERVER_PORT} added successful."
     fi
 }
 
@@ -61,16 +61,16 @@ function ssh-target-remove
     # check if record exist
     RES=`grep "SERVER_${SERVER_NAME}_IP" "${IP_MAP_FILE}"`
     if [ "${RES}" == "" ]; then
-        echo "Server ${SERVER_NAME} not exist."
+        echo "[INFO] Server ${SERVER_NAME} not exist."
     else
         # remove record
         sed -i "/SERVER_${SERVER_NAME}_IP/d" "${IP_MAP_FILE}"
         # check result
         RES=`grep "SERVER_${SERVER_NAME}_IP" "${IP_MAP_FILE}"`
         if [ "${RES}" == "" ]; then
-            echo "Server ${SERVER_NAME} removed successful."
+            echo "[Done] Server ${SERVER_NAME} removed successful."
         else
-            echo "Server remove failed!"
+            echo "[ERROR] Server remove failed!"
         fi
     fi
 }

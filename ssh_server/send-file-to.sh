@@ -3,8 +3,10 @@
 function usage()
 {
     cat << EOUSAGE
-Usage: send-file-to.sh [-f <FOLDER_TO_STORE>] [-n] <SERVER_NAME> FILE1 [FILE2 ..]
+Usage: send-file-to.sh [-f <FOLDER_TO_STORE>] [-u <SERVER_USER>] [-p <SERVER_PORT>] [-n] <SERVER_NAME> FILE1 [FILE2 ..]
        -f specify server folder to store files
+       -u specify server user
+       -p specify server port
        -n don't try remove files of same name on server before transfer
 EOUSAGE
 }
@@ -13,12 +15,18 @@ EOUSAGE
 IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh"
 
 TARGET_PATH=""
+SERVER_USER=""
+SERVER_PORT=""
 declare -i DELETE_BEFORE_CP=1
 
 while getopts ":f:u:p:n" opt
 do
     case ${opt} in
         f ) TARGET_PATH="${OPTARG}"
+            ;;
+        u ) SERVER_USER="${OPTARG}"
+            ;;
+        p ) SERVER_PORT="${OPTARG}"
             ;;
         n ) DELETE_BEFORE_CP=0
             ;;
@@ -38,6 +46,14 @@ if [ "${SERVER_META}" = "" ]; then
     echo "[ERROR] Unknown server or wrong parameters."
     usage
     exit 1
+fi
+
+# If user or port specifed, modify SERVER_META
+if [ "${SERVER_USER}" != "" ]; then
+    SERVER_META="${SERVER_META%\ *} ${SERVER_USER}@${SERVER_META#*@}"
+fi
+if [ "${SERVER_PORT}" != "" ]; then
+    SERVER_META="${SERVER_PORT} ${SERVER_META#*\ }"
 fi
 
 # Check parameters

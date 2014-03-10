@@ -3,8 +3,10 @@
 function usage()
 {
     cat << EOUSAGE
-Usage: receive-file-from.sh [-f <FOLDER_TO_STORE>] [-d] <SERVER_NAME> FILE1 [FILE2 ..]
+Usage: receive-file-from.sh [-f <FOLDER_TO_STORE>] [-u <SERVER_USER>] [-p <SERVER_PORT>] [-d] <SERVER_NAME> FILE1 [FILE2 ..]
        -f specify local folder to receive files
+       -u specify server user
+       -p specify server port
        -d delete files on server after transfer finish
 EOUSAGE
 }
@@ -13,12 +15,18 @@ EOUSAGE
 IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh"
 
 TARGET_PATH="./"
+SERVER_USER=""
+SERVER_PORT=""
 declare -i DELETE_AFTER_CP=0
 
-while getopts ":f:d" opt
+while getopts ":f:u:p:d" opt
 do
     case ${opt} in
         f ) TARGET_PATH="${OPTARG}"
+            ;;
+        u ) SERVER_USER="${OPTARG}"
+            ;;
+        p ) SERVER_PORT="${OPTARG}"
             ;;
         d ) DELETE_AFTER_CP=1
             ;;
@@ -34,10 +42,18 @@ shift 1
 
 # Get server user name and IP
 SERVER_META=`${IP_MAP_FILE} ${SERVER_NAME}`
-if [ "${SERVER_META}" = "" ]; then
+if [ "${SERVER_META}" == "" ]; then
     echo "[ERROR] Unknown server or wrong parameters."
     usage
     exit 1
+fi
+
+# If user or port specifed, modify SERVER_META
+if [ "${SERVER_USER}" != "" ]; then
+    SERVER_META="${SERVER_META%\ *} ${SERVER_USER}@${SERVER_META#*@}"
+fi
+if [ "${SERVER_PORT}" != "" ]; then
+    SERVER_META="${SERVER_PORT} ${SERVER_META#*\ }"
 fi
 
 # Check parameters

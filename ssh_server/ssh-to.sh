@@ -3,16 +3,25 @@
 function usage()
 {
     cat << EOUSAGE
-Usage: ssh-to.sh <SERVER_NAME>
+Usage: ssh-to.sh [-u <SERVER_USER>] [-p <SERVER_PORT>] <SERVER_NAME>
+       -u specify server user
+       -p specify server port
 EOUSAGE
 }
 
 # Name-to-ip mapping file
 IP_MAP_FILE="${HOME}/Script/ssh_server/map-name-to-ip.sh"
 
-while getopts ":" opt
+SERVER_USER=""
+SERVER_PORT=""
+
+while getopts ":u:p:" opt
 do
     case ${opt} in
+        u ) SERVER_USER="${OPTARG}"
+            ;;
+        p ) SERVER_PORT="${OPTARG}"
+            ;;
         ? ) usage
             exit 1
             ;;
@@ -29,6 +38,14 @@ if [ "${SERVER_META}" = "" ]; then
     echo "[ERROR] Unknown server or wrong parameters."
     usage
     exit 1
+fi
+
+# If user or port specifed, modify SERVER_META
+if [ "${SERVER_USER}" != "" ]; then
+    SERVER_META="${SERVER_META%\ *} ${SERVER_USER}@${SERVER_META#*@}"
+fi
+if [ "${SERVER_PORT}" != "" ]; then
+    SERVER_META="${SERVER_PORT} ${SERVER_META#*\ }"
 fi
 
 # Login to server

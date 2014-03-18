@@ -73,11 +73,13 @@ function removeItemsByPrefix()
     echo ${1} | sed -e "s#${2}[^:]*##g" -e "s#[:]\+#:#g" -e "s#^:##g" 
 }
 
+APP_FOLDER="${HOME}/Apps/"
+
 # update the user application folder to system paths
 # ${1}: [optional] folder content user applications, default is "${HOME}/app/"
 function flushUserAppFolders()
 {
-    base_folder="${HOME}/app/"
+    base_folder="${APP_FOLDER}"
     export PATH=`removeItemsByPrefix "${PATH}" "${base_folder}"`
     export LD_LIBRARY_PATH=`removeItemsByPrefix "${LD_LIBRARY_PATH}" "${base_folder}"`
     export C_INCLUDE_PATH=`removeItemsByPrefix "${C_INCLUDE_PATH}" "${base_folder}"`
@@ -90,12 +92,12 @@ function flushUserAppFolders()
 # ${1}: use "cmake" if want to get cmake-style prefix parameter
 function getPrefix()
 {
-    app_folder=`pwd`
-    app_folder=${app_folder##*/}
+    cur_folder=`pwd`
+    cur_folder=${cur_folder##*/}
     if [ "${1}" == "cmake" ]; then
-        echo "-DCMAKE_INSTALL_PREFIX=${HOME}/app/${app_folder}"
+        echo "-DCMAKE_INSTALL_PREFIX=${APP_FOLDER}/${cur_folder}"
     else
-        echo "--prefix=${HOME}/app/${app_folder}"
+        echo "--prefix=${APP_FOLDER}/${cur_folder}"
     fi
 }
 

@@ -7,7 +7,51 @@
 # Look up a word (either English or Chinese) at dict.cn
 
 USAGE='USAGE: dict.sh "word-to-look-up"'
-TMP_FILE='/tmp/dict_lookup'
+LAZY_DOWNLOAD='N' # 'Y'
+WEB_FILE='/tmp/dict_lookup.html'
+RESOLVED_FILE='/tmp/dict_resolved.txt'
+MP3_FILE='/tmp/dict_audio.mp3'
+MP3_PLAYER='mpg321'
+if [ `uname` == "Darwin" ]; then
+    SED='gsed'
+else
+    SED='sed'
+fi
+
+function cleanUp()
+{
+    if [ "${LAZY_DOWNLOAD}" != "Y" ]; then
+        rm -f ${WEB_FILE} ${RESOLVED_FILE} ${MP3_FILE}
+    fi
+}
+
+function playMp3()
+{
+    url="http://audio.dict.cn/${1}"
+    download ${url} ${MP3_FILE}
+    ${MP3_PLAYER} ${MP3_FILE} > /dev/null 2>&1 &
+}
+
+function download()
+{
+    url=${1}
+    file=${2}
+    declare -i retyrTimes=0
+
+    if [[ "${LAZY_DOWNLOAD}" == "Y" && -r "${file}" ]]; then
+        return 0
+    fi
+
+    curl --connect-timeout 1 ${url} 2>/dev/null > ${file}
+    while [[ ${?} -ne 0 && ${retyrTimes} -lt 5 ]]; do   # timeout
+        retyrTimes=$((retyrTimes+1))
+        curl --connect-timeout 1 ${url} 2>/dev/null > ${file}
+    done
+    if [ ${retyrTimes} -ge 5 ]; then
+        return -1
+    fi
+    return 0
+}
 
 if [ ${#} -eq 0 ]; then
     echo "${USAGE}"
@@ -15,23 +59,26 @@ if [ ${#} -eq 0 ]; then
 fi
 
 # Show this word
-figlet ${*}
+figlet ${*} > ${RESOLVED_FILE}
 
 # Fetch dict.cn webpage
-word=`echo $* | sed 's/ /%20/g'`
-declare -i retyrTimes=0
-curl --connect-timeout 1 http://dict.cn/${word} 2>/dev/null > ${TMP_FILE}
-while [[ ${?} -ne 0 && ${retyrTimes} -lt 5 ]]; do   # timeout
-    retyrTimes=$((retyrTimes+1))
-    curl --connect-timeout 1 http://dict.cn/${word} 2>/dev/null > ${TMP_FILE}
-done
-if [ ${retyrTimes} -ge 5 ]; then
+word=`echo $* | ${SED} 's/ /%20/g'`
+download "http://dict.cn/${word}" "${WEB_FILE}"
+if [ ${?} -ne 0 ]; then
     echo "[ERROR] Connect to dict.cn failed."
-    rm -f ${TMP_FILE}
+    cleanUp
     exit 1
 fi
 
-# Parse webpage content
-grep '\(基本释义\|您要查找的是不是\)' -A1000 ${TMP_FILE} | grep '<div class="section ask">' -B1000 | sed 's#<div class="ifufind">\(.*\)</div>#<h3>\1</h3>#g' | grep -v '<div class=' | sed -e 's/<h3>/ ====[ /g' -e 's/<\/h3>/ ]====/g' -e 's/<[^>]*>//g' -e 's/^[ \t]*//' | grep -v 'googletag.cmd.push' | dos2unix | grep -v '^[ \t]*$'
-rm -f ${TMP_FILE}
+# Play audio
+mp3_url=`grep -o 'naudio="[^"]*' ${WEB_FILE} | ${SED} 's#naudio="##g' | head -1`
+if [ "${mp3_url}" != "" ]; then
+    playMp3 ${mp3_url}
+fi
 
+# Parse webpage content
+grep '英 <bdo lang="EN-US">\[[^]]*\]</bdo>' ${WEB_FILE} | ${SED} -e 's#<[^>]*>##g' | grep -o '..\[[^]]*\]' >> ${RESOLVED_FILE}
+grep '美 <bdo lang="EN-US">\[[^]]*\]</bdo>' ${WEB_FILE} | ${SED} -e 's#<[^>]*>##g' | grep -o '..\[[^]]*\]' >> ${RESOLVED_FILE}
+grep '\(基本释义\|您要查找的是不是\)' -A1000 ${WEB_FILE} | grep '<div class="section ask">' -B1000 | ${SED} 's#<div class="ifufind">\(.*\)</div>#<h3>\1</h3>#g' | grep -v '<div class=' | ${SED} -e 's/<h3>/ ========[ /g' -e 's/<\/h3>/ ]========/g' -e 's/<[^>]*>//g' -e 's/^[ \t]*//' | grep -v 'googletag.cmd.push' | dos2unix | grep -v '^[ \t]*$' >> ${RESOLVED_FILE}
+less ${RESOLVED_FILE}
+cleanUp

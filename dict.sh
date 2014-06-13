@@ -7,7 +7,10 @@
 # Look up a word (either English or Chinese) at dict.cn
 
 USAGE='USAGE: dict.sh "word-to-look-up"'
+DEBUG_MODE='N' # 'Y'
 LAZY_DOWNLOAD='N' # 'Y'
+TIMEOUT=3
+RETRY_TIMES=3
 WEB_FILE='/tmp/dict_lookup.html'
 RESOLVED_FILE='/tmp/dict_resolved.txt'
 MP3_FILE='/tmp/dict_audio.mp3'
@@ -17,6 +20,13 @@ if [ `uname` == "Darwin" ]; then
 else
     SED='sed'
 fi
+
+function debug_log()
+{
+    if [ "${DEBUG_MODE}" == "Y" ]; then
+        echo "[DEBUG] ${*}"
+    fi
+}
 
 function cleanUp()
 {
@@ -42,12 +52,15 @@ function download()
         return 0
     fi
 
-    curl --connect-timeout 1 ${url} 2>/dev/null > ${file}
+    debug_log "Begin http .."
+    curl --connect-timeout ${TIMEOUT} ${url} 2>/dev/null > ${file}
     while [[ ${?} -ne 0 && ${retyrTimes} -lt 5 ]]; do   # timeout
+        debug_log "Retry http, $((${retyrTimes}+1)) time.."
         retyrTimes=$((retyrTimes+1))
         curl --connect-timeout 1 ${url} 2>/dev/null > ${file}
     done
-    if [ ${retyrTimes} -ge 5 ]; then
+    debug_log "Got it .."
+    if [ ${retyrTimes} -ge ${RETRY_TIMES} ]; then
         return -1
     fi
     return 0

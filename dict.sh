@@ -7,8 +7,9 @@
 # Look up a word (either English or Chinese) at dict.cn
 
 USAGE='USAGE: dict.sh "word-to-look-up"'
-DEBUG_MODE='N' # 'Y'
+DEBUG_MODE='Y' # 'Y'
 LAZY_DOWNLOAD='N' # 'Y'
+PLAY_VOICE='N'
 TIMEOUT=3
 RETRY_TIMES=3
 WEB_FILE='/tmp/dict_lookup.html'
@@ -37,6 +38,7 @@ function cleanUp()
 
 function playMp3()
 {
+    debug_log "Play mp3 for ${1} .."
     url="http://audio.dict.cn/${1}"
     download ${url} ${MP3_FILE}
     ${MP3_PLAYER} ${MP3_FILE} > /dev/null 2>&1 &
@@ -66,6 +68,11 @@ function download()
     return 0
 }
 
+if [ "${1}" == "-v" ]; then
+    PLAY_VOICE='Y'
+    shift
+fi
+
 if [ ${#} -eq 0 ]; then
     echo "${USAGE}"
     exit 1
@@ -83,15 +90,18 @@ if [ ${?} -ne 0 ]; then
     exit 1
 fi
 
-# Play audio
-mp3_url=`grep -o 'naudio="[^"]*' ${WEB_FILE} | ${SED} 's#naudio="##g' | head -1`
-if [ "${mp3_url}" != "" ]; then
-    playMp3 ${mp3_url}
-fi
-
 # Parse webpage content
 grep '英 <bdo lang="EN-US">\[[^]]*\]</bdo>' ${WEB_FILE} | ${SED} -e 's#<[^>]*>##g' | grep -o '..\[[^]]*\]' >> ${RESOLVED_FILE}
 grep '美 <bdo lang="EN-US">\[[^]]*\]</bdo>' ${WEB_FILE} | ${SED} -e 's#<[^>]*>##g' | grep -o '..\[[^]]*\]' >> ${RESOLVED_FILE}
 grep '\(基本释义\|您要查找的是不是\)' -A1000 ${WEB_FILE} | grep '<div class="section ask">' -B1000 | ${SED} 's#<div class="ifufind">\(.*\)</div>#<h3>\1</h3>#g' | grep -v '<div class=' | ${SED} -e 's/<h3>/ ========[ /g' -e 's/<\/h3>/ ]========/g' -e 's/<[^>]*>//g' -e 's/^[ \t]*//' | grep -v 'googletag.cmd.push' | dos2unix | grep -v '^[ \t]*$' >> ${RESOLVED_FILE}
 less ${RESOLVED_FILE}
+
+# Play audio
+if [ "${PLAY_VOICE}" == "Y" ]; then
+    mp3_url=`grep -o 'naudio="[^"]*' ${WEB_FILE} | ${SED} 's#naudio="##g' | head -1`
+    if [ "${mp3_url}" != "" ]; then
+        playMp3 ${mp3_url}
+    fi
+fi
+
 cleanUp

@@ -9,6 +9,20 @@
 # Get prefix parameter for configure or cmake to install application
 # to user app folder.
 
+# check if the given path is already part of given variable
+# ${1}: variable content
+# ${2}: path to check
+function isPathInVariable()
+{
+    if [[ "`echo \"${1}\" | ggrep -o \":${2}:\"`" == "" &&
+          "`echo \"${1}\" | ggrep -o \"^${2}:\"`" == "" &&
+          "`echo \"${1}\" | ggrep -o \":${2}$\"`" == "" ]]; then
+        echo "N"
+    else
+        echo "Y"
+    fi
+}
+
 # export new path to variable if not exist
 # ${1}: variable name
 # ${2}: value to append
@@ -16,7 +30,7 @@
 function exportPathOnce()
 {
     if [ "${3}" == "" ]; then
-        if [ "`echo ${!1} | grep -o \"${2}\"`" == "" ]; then
+        if [ `isPathInVariable "${!1}" "${2}"` == "N" ]; then
             if [ "${!1}" == "" ]; then
                 export $"${1}"=${2}
             else
@@ -24,7 +38,7 @@ function exportPathOnce()
             fi
         fi
     else
-        if [ "`echo \"${3}\" | grep -o \"${2}\"`" == "" ]; then
+        if [ `isPathInVariable "${3}" "${2}"` == "N" ]; then
             export $"${1}"=${2}:${3}
         fi
     fi
@@ -47,7 +61,8 @@ function exportUserPath()
 {
     base_folder="${1}"
     # ignore folder end with _OFF
-    for folder in `ls "${base_folder}" | grep -v '_OFF$'`; do
+    for folder in `ls "${base_folder}" | ggrep -v '_OFF$'`; do
+        #echo "[DEBUG] Got ${app_folder}"
         app_folder="${base_folder}${folder}"
         if [ -d ${app_folder} ]; then
             exportFolderOnce PATH ${app_folder}/bin
@@ -70,7 +85,7 @@ function exportUserPath()
 # ${2}: prefix to match
 function removeItemsByPrefix()
 {
-    echo ${1} | sed -e "s#${2}[^:]*##g" -e "s#[:]\+#:#g" -e "s#^:##g" 
+    echo ${1} | gsed -e "s#${2}[^:]*##g" -e "s#[:]\+#:#g" -e "s#^:##g" 
 }
 
 APP_FOLDER="${HOME}/Apps/"

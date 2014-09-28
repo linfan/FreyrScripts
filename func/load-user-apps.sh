@@ -23,23 +23,41 @@ function isPathInVariable()
     fi
 }
 
+# get the name of shell
+function getShellName()
+{
+    echo "${SHELL##*/}"
+}
+
 # export new path to variable if not exist
 # ${1}: variable name
 # ${2}: value to append
 # ${3}: [optional] original value
 function exportPathOnce()
 {
-    if [ "${3}" == "" ]; then
-        if [ `isPathInVariable "${!1}" "${2}"` == "N" ]; then
-            if [ "${!1}" == "" ]; then
-                export $"${1}"=${2}
-            else
-                export $"${1}"=${2}:${!1}
-            fi
+    PATH_ORI=""
+    if [ "${3}" = "" ]; then
+        if [ `getShellName` = "zsh" ]; then
+            PATH_ORI=$(eval echo "\${${1}}")
+        else
+            PATH_ORI="${!1}"
         fi
     else
-        if [ `isPathInVariable "${3}" "${2}"` == "N" ]; then
-            export $"${1}"=${2}:${3}
+        PATH_ORI="${3}"
+    fi
+    if [ `isPathInVariable "${PATH_ORI}" "${2}"` = "N" ]; then
+        if [ "${PATH_ORI}" = "" ]; then
+            if [ `getShellName` = "zsh" ]; then
+                eval "export ${1}=${2}"
+            else
+                export $"${1}"=${2}
+            fi
+        else
+            if [ `getShellName` = "zsh" ]; then
+                eval "export ${1}=${2}:${PATH_ORI}"
+            else
+                export $"${1}"=${2}:${PATH_ORI}
+            fi
         fi
     fi
 }
@@ -62,8 +80,8 @@ function exportUserPath()
     base_folder="${1}"
     # ignore folder end with _OFF
     for folder in `ls "${base_folder}" | ggrep -v '_OFF$'`; do
+        app_folder="${base_folder}/${folder}"
         #echo "[DEBUG] Got ${app_folder}"
-        app_folder="${base_folder}${folder}"
         if [ -d ${app_folder} ]; then
             exportFolderOnce PATH ${app_folder}/bin
             exportFolderOnce PATH ${app_folder}/sbin
@@ -71,7 +89,7 @@ function exportUserPath()
             exportFolderOnce LD_LIBRARY_PATH ${app_folder}/lib64
             exportFolderOnce C_INCLUDE_PATH ${app_folder}/include
             exportFolderOnce CPLUS_INCLUDE_PATH ${app_folder}/include
-            if [ "${MANPATH}" == "" ]; then
+            if [ "${MANPATH}" = "" ]; then
                 exportFolderOnce MANPATH ${app_folder}/share/man `manpath`
             else
                 exportFolderOnce MANPATH ${app_folder}/share/man
@@ -88,7 +106,7 @@ function removeItemsByPrefix()
     echo ${1} | gsed -e "s#${2}[^:]*##g" -e "s#[:]\+#:#g" -e "s#^:##g" 
 }
 
-APP_FOLDER="${HOME}/Apps/"
+APP_FOLDER="${HOME}/Apps"
 
 # update the user application folder to system paths
 # ${1}: [optional] folder content user applications, default is "${HOME}/app/"
@@ -109,10 +127,9 @@ function getPrefix()
 {
     cur_folder=`pwd`
     cur_folder=${cur_folder##*/}
-    if [ "${1}" == "cmake" ]; then
+    if [ "${1}" = "cmake" ]; then
         echo "-DCMAKE_INSTALL_PREFIX=${APP_FOLDER}/${cur_folder}"
     else
         echo "--prefix=${APP_FOLDER}/${cur_folder}"
     fi
 }
-

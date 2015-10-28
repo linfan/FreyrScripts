@@ -24,8 +24,8 @@ MODE=${MODE_ALL}
 
 function usage
 {
-    echo "Usage: for_each_file_do.sh -l list_file command [parameters of command]"
-    echo "       for_each_file_do.sh [-c] [-d] folder command [parameters of command]"
+    echo "Usage: foreach-file-do -l list_file command [parameters of command]"
+    echo "       foreach-file-do [-c] [-d] folder command [parameters of command]"
     echo " -c : common file only"
     echo " -d : directory only"
 }
@@ -85,9 +85,9 @@ fi
 shift
 COMMAND=${*}
 
-declare -i c=`wc ${TMP_FILE} -l | grep -o "^[0-9]*"` # total file number
+declare -i c=`wc -l ${TMP_FILE} | grep -o "^[ ]*[0-9]*"` # total file number
 for i in `seq 1 $c`; do
-    file=`head -${i} ${TMP_FILE} | tail -1`  # get a full file name
+    file=`head -n ${i} ${TMP_FILE} | tail -n 1`  # get a full file name
     ${COMMAND} "${file}"  # execute the command
 done
 rm -f ${TMP_FILE}  # remove the temporary list file

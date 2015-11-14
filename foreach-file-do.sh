@@ -19,13 +19,13 @@ MODE_COMMON_FILE_ONLY=2
 MODE_FILE_LIST=3
 
 # Global variables
-TMP_FILE="/tmp/foreach_file_do_list"
+TMP_FILE="/tmp/foreach_file_do_list-$(date '+%Y%m%d-%H%M')"
 MODE=${MODE_ALL}
 
 function usage
 {
-    echo "Usage: foreach-file-do -l list_file command [parameters of command]"
-    echo "       foreach-file-do [-c] [-d] folder command [parameters of command]"
+    echo "Usage: ${0} -l list_file command [parameters of command]"
+    echo "       ${0} [-c] [-d] folder command [parameters of command]"
     echo " -c : common file only"
     echo " -d : directory only"
 }

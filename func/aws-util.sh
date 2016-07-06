@@ -10,8 +10,8 @@ FAILED=-1
 SUCCEED=0
 IMG_ID=ami-0fcccf61
 INS_TYPE=t2.micro
-SEC_GRP_ID=default
-SSH_KEY_NAME=aws
+SEC_GRP_ID=your-security-group-id
+SSH_KEY_NAME=your-ssh-key-name
 SSH_KEY_PATH=/path/to/your/ssh_key.pem
 SSH_USER=ubuntu
 

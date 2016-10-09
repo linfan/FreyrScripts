@@ -131,7 +131,7 @@ function aws-ssh-to
 {
     if [ "${1}" = "" ]; then echo "Need specify a instance name ..."; return; fi
     PublicIp=$(aws-get-ins-ip ${1} 0)
-    ssh -i ${SSH_KEY_PATH} ${SSH_USER}@${PublicIp}
+    ssh -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} ${SSH_USER}@${PublicIp}
 }
 
 ## Private Functions ##

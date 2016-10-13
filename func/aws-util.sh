@@ -14,6 +14,7 @@ SEC_GRP_ID=your-security-group-id
 SSH_KEY_NAME=your-ssh-key-name
 SSH_KEY_PATH=/path/to/your/ssh_key.pem
 SSH_USER=ubuntu
+DISK_SIZE_IN_GB=50
 
 ## Public Functions ##
 
@@ -77,8 +78,10 @@ function aws-get-ins-name
 function aws-create-ins
 {
     insName=${1}
+    BLOCK_DEVICE_MAPPINGS="[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}]"
     InstanceId=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count 1 \
-        --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --query 'Instances[0].InstanceId');
+        --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --block-device-mappings ${BLOCK_DEVICE_MAPPINGS} \
+        --query 'Instances[0].InstanceId');
     InstanceId=$(_extract_info ${InstanceId})
     if [ "${insName}" != "" ]; then
         aws ec2 create-tags --resources ${InstanceId} --tags "Key=Name,Value=${insName}"

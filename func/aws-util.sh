@@ -129,12 +129,46 @@ function aws-terminate-ins
 # [Parameters]
 # $1 - name of instance
 # [Return]
-# Current and previous status of specified instance
+# None
 function aws-ssh-to
 {
     if [ "${1}" = "" ]; then echo "Need specify a instance name ..."; return; fi
     PublicIp=$(aws-get-ins-ip ${1} 0)
     ssh -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} ${SSH_USER}@${PublicIp}
+}
+
+# Copy specified file from local to instance
+# [Parameters]
+# $1 - name of instance
+# $2 - local file to be copy
+# $3 - remote path
+# [Return]
+# None
+function aws-copy-file-to
+{
+    if [ "${3}" = "" ]; then echo "Need specify [instance name], [local file] and [remote file] ..."; return; fi
+    PublicIp=$(aws-get-ins-ip ${1} 0)
+    LocalFile=${2}
+    RemoteFile=${3}
+    scp -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} \
+        ${LocalFile} ${SSH_USER}@${PublicIp}:${RemoteFile}
+}
+
+# Copy specified file from instance to local
+# [Parameters]
+# $1 - name of instance
+# $2 - remote file to be copy
+# $3 - local path
+# [Return]
+# None
+function aws-copy-file-from
+{
+    if [ "${3}" = "" ]; then echo "Need specify [instance name], [remote file] and [local file] ..."; return; fi
+    PublicIp=$(aws-get-ins-ip ${1} 0)
+    RemoteFile=${2}
+    LocalFile=${3}
+    scp -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} \
+        ${SSH_USER}@${PublicIp}:${RemoteFile} ${LocalFile}
 }
 
 ## Private Functions ##

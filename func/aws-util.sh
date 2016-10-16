@@ -15,6 +15,7 @@ SSH_KEY_NAME=your-ssh-key-name
 SSH_KEY_PATH=/path/to/your/ssh_key.pem
 SSH_USER=ubuntu
 DISK_SIZE_IN_GB=50
+PROXY_LOCAL_PORT=22001
 
 ## Public Functions ##
 
@@ -169,6 +170,26 @@ function aws-copy-file-from
     LocalFile=${3}
     scp -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} \
         ${SSH_USER}@${PublicIp}:${RemoteFile} ${LocalFile}
+}
+
+# Setup socks5 proxy
+# [Parameters]
+# $1 - name of instance
+# $2 - proxy local port (optional)
+# [Return]
+# None
+function aws-socks5-proxy
+{
+    if [ "${1}" = "" ]; then echo "Need specify a instance name ..."; return; fi
+    PublicIp=$(aws-get-ins-ip ${1} 0)
+    ProxyLocalPort=${2:-${PROXY_LOCAL_PORT}}
+    ProxyRemotePort=22
+    # Kill existing port forwarding process
+    for pid in $(ps aux | grep "CfNgD ${ProxyLocalPort}" | grep -v grep | awk "{print \$2}"); do
+        kill -9 ${pid}
+    done
+    ssh -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} \
+        -CfNgD ${ProxyLocalPort} -p ${ProxyRemotePort} ${SSH_USER}@${PublicIp}
 }
 
 ## Private Functions ##

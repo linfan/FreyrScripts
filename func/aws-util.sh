@@ -6,23 +6,27 @@
 
 ## Global Paremeters ##
 
-FAILED=-1
-SUCCEED=0
 IMG_ID=ami-0fcccf61
 INS_TYPE=t2.micro
-SEC_GRP_ID=your-security-group-id
-SSH_KEY_NAME=your-ssh-key-name
+SEC_GRP_ID=<your-security-group-id>
+SSH_KEY_NAME=<your-ssh-key-name>
 SSH_KEY_PATH=/path/to/your/ssh_key.pem
 SSH_USER=ubuntu
-DISK_SIZE_IN_GB=50
+DISK_SIZE_IN_GB=8
 PROXY_LOCAL_PORT=22001
+
+## Global Constant ##
+
+FAILED=-1
+SUCCEED=0
+BLOCK_DEVICE_MAPPINGS="[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}]"
 
 ## Public Functions ##
 
 # Get IP address of managed instances
 # [Parameters]
 # If no paremeters specified, all instances available will returned
-# If one paremeter specified, it means only show instance of specified name
+# If one paremeter specified, it means only show instance of specified name/id
 # If two paremeter specified, they are reservation-index and instance-index
 # [Return]
 # List of instance IPs
@@ -79,7 +83,6 @@ function aws-get-ins-name
 function aws-create-ins
 {
     insName=${1}
-    BLOCK_DEVICE_MAPPINGS="[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}]"
     InstanceId=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count 1 \
         --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --block-device-mappings ${BLOCK_DEVICE_MAPPINGS} \
         --query 'Instances[0].InstanceId');
@@ -90,39 +93,56 @@ function aws-create-ins
     echo ${InstanceId}
 }
 
+# Create many new instances with default configure at once
+# [Parameters]
+# $1 - number of instance
+# $2 - name prefix of instance
+# [Return]
+# IDs of the new instances
+function aws-bulk-create-ins
+{
+    if [ "${2}" = "" ]; then echo "Need specify [instance count] and [instance name prefix] ..."; return; fi
+    insCount=${1}
+    insNamePrefix=${2}
+    InstanceId=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count ${insCount} \
+        --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --block-device-mappings ${BLOCK_DEVICE_MAPPINGS} \
+        --query 'Reservations[].Instances[].InstanceId');
+    echo ${InstanceId}
+}
+
 # Start specified instance
 # [Parameters]
-# $1 - name of instance
+# $1 - name or id of instance
 # [Return]
 # Current and previous status of specified instance
 function aws-start-ins
 {
-    if [ "${1}" = "" ]; then echo "Need specify a instance name ..."; return; fi
-    InstanceId=$(aws-get-ins-id ${1} 0)
+    if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
+    InstanceId=$(_aws_get_ins_id ${1} 0)
     aws ec2 start-instances --instance-ids ${InstanceId}
 }
 
 # Stop specified instance
 # [Parameters]
-# $1 - name of instance
+# $1 - name or id of instance
 # [Return]
 # Current and previous status of specified instance
 function aws-stop-ins
 {
-    if [ "${1}" = "" ]; then echo "Need specify a instance name ..."; return; fi
-    InstanceId=$(aws-get-ins-id ${1} 0)
+    if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
+    InstanceId=$(_aws_get_ins_id ${1} 0)
     aws ec2 stop-instances --instance-ids ${InstanceId}
 }
 
 # Terminate specified instance
 # [Parameters]
-# $1 - name of instance
+# $1 - name or id of instance
 # [Return]
 # Current and previous status of specified instance
 function aws-terminate-ins
 {
-    if [ "${1}" = "" ]; then echo "Need specify a instance name ..."; return; fi
-    InstanceId=$(aws-get-ins-id ${1} 0)
+    if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
+    InstanceId=$(_aws_get_ins_id ${1} 0)
     aws ec2 terminate-instances --instance-ids ${InstanceId}
 }
 
@@ -193,26 +213,36 @@ function aws-socks5-proxy
 }
 
 ## Private Functions ##
+# Minus input number by one and print
 function _minus_one
 {
     declare -i num=0
     if [ "${1}" != "" ]; then num="${1}-1"; echo ${num}; else echo "*"; fi
 }
+# Remove the surrounding quotes in string
 function _extract_info
 {
     matchStr="[.a-zA-Z0-9-]\+"
     echo ${1} | grep -o "${matchStr}"
 }
+# Judge whether input content is a number
 function _is_num
 {
     if [ "$(echo ${1} | grep '^[0-9]*$')" ]; then return ${SUCCEED}; else return ${FAILED}; fi
 }
+# Given a instance id or name, return its instance id
+function _aws_get_ins_id
+{
+    if [ "$(echo ${1} | grep '^i-[0-9a-z]\{8\}$')" ]; then echo ${1}; else aws-get-ins-id ${1}; fi
+}
+# Get instance information with indexed query
 function _aws_get_ins_desc_via_index
 {
     queryStr="${1}"
     res=$(aws ec2 describe-instances --query "${queryStr}")
     echo $(_extract_info ${res})
 }
+# Get instance information with specified named query
 function _aws_get_ins_desc_via_tag_name
 {
     queryStr="${1}"
@@ -220,6 +250,7 @@ function _aws_get_ins_desc_via_tag_name
     res=$(aws ec2 describe-instances --query "${queryStr}" --filter Name=tag:Name,Values=${insName})
     echo $(_extract_info ${res})
 }
+# Get instance information according to query parameter
 function _aws_ins_desc_wrap
 {
     insQuery="${1}"

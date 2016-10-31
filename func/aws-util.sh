@@ -133,7 +133,7 @@ function aws-bulk-create-ins
 # Current status of specified instance
 function aws-start-ins
 {
-    if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
+    if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
     InstanceId=$(_aws_get_ins_id ${1} 0)
     res=$(aws ec2 start-instances --instance-ids ${InstanceId} --query 'StartingInstances[0].CurrentState.Name')
     echo "${InstanceId} -> $(_extract_info ${res})"
@@ -146,7 +146,7 @@ function aws-start-ins
 # Current status of specified instance
 function aws-stop-ins
 {
-    if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
+    if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
     InstanceId=$(_aws_get_ins_id ${1} 0)
     res=$(aws ec2 stop-instances --instance-ids ${InstanceId} --query 'StoppingInstances[0].CurrentState.Name')
     echo "${InstanceId} -> $(_extract_info ${res})"
@@ -159,7 +159,7 @@ function aws-stop-ins
 # Current status of specified instance
 function aws-terminate-ins
 {
-    if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
+    if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
     InstanceId=$(_aws_get_ins_id ${1} 0)
     res=$(aws ec2 terminate-instances --instance-ids ${InstanceId} --query 'TerminatingInstances[0].CurrentState.Name')
     echo "${InstanceId} -> $(_extract_info ${res})"
@@ -172,7 +172,7 @@ function aws-terminate-ins
 # None
 function aws-ssh-to
 {
-    if [ "${1}" = "" ]; then echo "Need specify a instance name ..."; return; fi
+    if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
     PublicIp=$(aws-get-ins-ip ${1} 0)
     ssh -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} ${SSH_USER}@${PublicIp}
 }
@@ -219,7 +219,7 @@ function aws-copy-file-from
 # None
 function aws-socks5-proxy
 {
-    if [ "${1}" = "" ]; then echo "Need specify a instance name ..."; return; fi
+    if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
     PublicIp=$(aws-get-ins-ip ${1} 0)
     ProxyLocalPort=${2:-${PROXY_LOCAL_PORT}}
     ProxyRemotePort=22
@@ -249,10 +249,10 @@ function _is_num
 {
     if [ "$(echo ${1} | grep '^[0-9]*$')" ]; then return ${SUCCEED}; else return ${FAILED}; fi
 }
-# Given a instance id or name, return its instance id
+# Given an instance id or name, return its instance id
 function _aws_get_ins_id
 {
-    if [ "$(echo ${1} | grep '^i-[0-9a-z]\{8\}$')" ]; then echo ${1}; else aws-get-ins-id ${1}; fi
+    if [ "$(echo ${1} | grep '^i-[0-9a-z]\{8,\}$')" ]; then echo ${1}; else aws-get-ins-id ${1}; fi
 }
 # Get instance information with indexed query
 function _aws_get_ins_desc_via_index

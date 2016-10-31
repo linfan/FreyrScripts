@@ -75,6 +75,21 @@ function aws-get-ins-name
     echo ${InstanceStatus} | sed 's/ / | /g'
 }
 
+# Rename specified instance
+# [Parameters]
+# $1 - id of instance
+# $2 - new name of instance
+# [Return]
+# ID and new name of instance
+function aws-rename-ins
+{
+    if [ "${2}" = "" ]; then echo "Need specify [instance id] and [instance new name] ..."; return; fi
+    insId=${1}
+    insNewName=${2}
+    aws ec2 create-tags --resources ${insId} --tags "Key=Name,Value=${insNewName}"
+    echo "${insId} -> ${insNewName}"
+}
+
 # Create new instance with default configure
 # [Parameters]
 # $1 - name of instance
@@ -88,9 +103,10 @@ function aws-create-ins
         --query 'Instances[0].InstanceId');
     InstanceId=$(_extract_info ${InstanceId})
     if [ "${insName}" != "" ]; then
-        aws ec2 create-tags --resources ${InstanceId} --tags "Key=Name,Value=${insName}"
+        aws-rename-ins ${InstanceId} ${insName}
+    else
+        echo ${InstanceId}
     fi
-    echo ${InstanceId}
 }
 
 # Create many new instances with default configure at once

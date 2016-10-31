@@ -20,71 +20,60 @@ PROXY_LOCAL_PORT=22001
 FAILED=-1
 SUCCEED=0
 BLOCK_DEVICE_MAPPINGS="[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}]"
+SSH_PARAMETERS=("-o" "UserKnownHostsFile /dev/null" "-o" "StrictHostKeyChecking no" "-i" "${SSH_KEY_PATH}")
 
 ## Public Functions ##
 
 # Get IP address of managed instances
 # [Parameters]
-# If no paremeters specified, all instances available will returned
-# If one paremeter specified, it means only show instance of specified name
-# If two paremeter specified, they are reservation-index and instance-index
+# $1 - instance name/id (optional)
 # [Return]
 # List of instance IPs
 function aws-get-ins-ip
 {
-    PublicIp="$(_aws_ins_desc_wrap PublicIpAddress ${1} ${2})"
-    echo ${PublicIp} | sed 's/ / | /g'
+    _aws_ins_desc_wrap 'PublicIpAddress' ${1}
 }
 
 # Get ID of managed instances
 # [Parameters]
-# If no paremeters specified, all instances available will returned
-# If one paremeter specified, it means only show instance of specified name
-# If two paremeter specified, they are reservation-index and instance-index
+# $1 - instance name/id (optional)
 # [Return]
 # List of instance IDs
 function aws-get-ins-id
 {
-    InstanceId="$(_aws_ins_desc_wrap InstanceId ${1} ${2})"
-    echo ${InstanceId} | sed 's/ / | /g'
+    _aws_ins_desc_wrap 'InstanceId' ${1}
 }
 
 # Get status of managed instances
 # [Parameters]
-# If no paremeters specified, all instances available will returned
-# If one paremeter specified, it means only show instance of specified name
-# If two paremeter specified, they are reservation-index and instance-index
+# $1 - instance name/id (optional)
 # [Return]
 # List of instance status
 function aws-get-ins-status
 {
-    InstanceStatus="$(_aws_ins_desc_wrap State.Name ${1} ${2})"
-    echo ${InstanceStatus} | sed 's/ / | /g'
+    _aws_ins_desc_wrap 'State.Name' ${1}
 }
 
 # Get name of managed instances
 # [Parameters]
-# If no paremeters specified, all instances available will returned
-# If one paremeter specified, it means only show instance of specified name
-# If two paremeter specified, they are reservation-index and instance-index
+# $1 - instance name/id (optional)
 # [Return]
 # List of instance names
 function aws-get-ins-name
 {
-    InstanceStatus="$(_aws_ins_desc_wrap 'Tags[*].Value' ${1} ${2})"
-    echo ${InstanceStatus} | sed 's/ / | /g'
+    _aws_ins_desc_wrap 'Tags[*].Value' ${1}
 }
 
 # Rename specified instance
 # [Parameters]
-# $1 - id of instance
-# $2 - new name of instance
+# $1 - name/id of an instance
+# $2 - new name of the instance
 # [Return]
 # ID and new name of instance
 function aws-rename-ins
 {
     if [ "${2}" = "" ]; then echo "Need specify [instance id] and [instance new name] ..."; return; fi
-    insId=${1}
+    insId=$(_aws_get_ins_id ${1})
     insNewName=${2}
     aws ec2 create-tags --resources ${insId} --tags "Key=Name,Value=${insNewName}"
     echo "${insId} -> ${insNewName}"
@@ -97,16 +86,13 @@ function aws-rename-ins
 # ID of the new instance
 function aws-create-ins
 {
+    if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
     insName=${1}
-    InstanceId=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count 1 \
+    insId=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count 1 \
         --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --block-device-mappings ${BLOCK_DEVICE_MAPPINGS} \
         --query 'Instances[0].InstanceId');
-    InstanceId=$(_extract_info ${InstanceId})
-    if [ "${insName}" != "" ]; then
-        aws-rename-ins ${InstanceId} ${insName}
-    else
-        echo ${InstanceId}
-    fi
+    insId=$(_extract_info ${insId})
+    aws-rename-ins ${insId} ${insName}
 }
 
 # Create many new instances with default configure at once
@@ -120,49 +106,74 @@ function aws-bulk-create-ins
     if [ "${2}" = "" ]; then echo "Need specify [instance count] and [instance name prefix] ..."; return; fi
     insCount=${1}
     insNamePrefix=${2}
-    InstanceIds=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count ${insCount} \
+    insIds=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count ${insCount} \
         --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --block-device-mappings ${BLOCK_DEVICE_MAPPINGS} \
         --query 'Instances[].InstanceId');
-    echo ${InstanceIds}
+    insIds=$(_extract_info ${insIds})
+    insIds=(`echo $insIds`)
+    index=0
+    for id in ${insIds}; do
+        index=$(_plus_one ${index})
+        insName="${insNamePrefix}_${index}"
+        aws-rename-ins ${id} ${insName}
+    done
 }
 
 # Start specified instance
 # [Parameters]
-# $1 - name or id of instance
+# ${1}...${n} - name/id list of instances
 # [Return]
 # Current status of specified instance
 function aws-start-ins
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
-    InstanceId=$(_aws_get_ins_id ${1} 0)
-    res=$(aws ec2 start-instances --instance-ids ${InstanceId} --query 'StartingInstances[0].CurrentState.Name')
-    echo "${InstanceId} -> $(_extract_info ${res})"
+    for ins in ${@}; do
+        _aws_ec2_action ${ins} "start-instances" "StartingInstances"
+    done
 }
 
 # Stop specified instance
 # [Parameters]
-# $1 - name or id of instance
+# ${1}...${n} - name/id list of instances
 # [Return]
 # Current status of specified instance
 function aws-stop-ins
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
-    InstanceId=$(_aws_get_ins_id ${1} 0)
-    res=$(aws ec2 stop-instances --instance-ids ${InstanceId} --query 'StoppingInstances[0].CurrentState.Name')
-    echo "${InstanceId} -> $(_extract_info ${res})"
+    for ins in ${@}; do
+        _aws_ec2_action ${ins} "stop-instances" "StoppingInstances"
+    done
 }
 
 # Terminate specified instance
 # [Parameters]
-# $1 - name or id of instance
+# ${1}...${n} - name/id list of instances
 # [Return]
 # Current status of specified instance
 function aws-terminate-ins
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
-    InstanceId=$(_aws_get_ins_id ${1} 0)
-    res=$(aws ec2 terminate-instances --instance-ids ${InstanceId} --query 'TerminatingInstances[0].CurrentState.Name')
-    echo "${InstanceId} -> $(_extract_info ${res})"
+    for ins in ${@}; do
+        _aws_ec2_action ${ins} "terminate-instances" "TerminatingInstances"
+    done
+}
+
+# Execute a command on all given instances parallelly
+# [Parameters]
+# ${1}..${n-1} - name/id of instance
+# ${n} - command to execute
+# [Return]
+# Execute outputs
+function aws-bulk-exec
+{
+    if [ "${2}" = "" ]; then echo "Need at least an instance name/id and a comamnd ..."; return; fi
+    cmdToExec=$(echo ${@[-1]})
+    insNames=${@[@]:1:${#@[@]}-1}
+    insNames=(`echo ${insNames}`)
+    for ins in ${insNames}; do
+        ip=$(aws-get-ins-ip ${ins})
+        ssh ${SSH_PARAMETERS} ${SSH_USER}@${ip} sh -c "\"${cmdToExec}\""
+    done
 }
 
 # SSH into specified instance
@@ -173,8 +184,8 @@ function aws-terminate-ins
 function aws-ssh-to
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
-    PublicIp=$(aws-get-ins-ip ${1} 0)
-    ssh -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} ${SSH_USER}@${PublicIp}
+    publicIp=$(aws-get-ins-ip ${1})
+    ssh ${SSH_PARAMETERS} ${SSH_USER}@${publicIp}
 }
 
 # Copy specified file from local to instance
@@ -187,11 +198,10 @@ function aws-ssh-to
 function aws-copy-file-to
 {
     if [ "${3}" = "" ]; then echo "Need specify [instance name], [local file] and [remote file] ..."; return; fi
-    PublicIp=$(aws-get-ins-ip ${1} 0)
+    publicIp=$(aws-get-ins-ip ${1})
     LocalFile=${2}
     RemoteFile=${3}
-    scp -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} \
-        ${LocalFile} ${SSH_USER}@${PublicIp}:${RemoteFile}
+    scp ${SSH_PARAMETERS} ${LocalFile} ${SSH_USER}@${publicIp}:${RemoteFile}
 }
 
 # Copy specified file from instance to local
@@ -204,11 +214,10 @@ function aws-copy-file-to
 function aws-copy-file-from
 {
     if [ "${3}" = "" ]; then echo "Need specify [instance name], [remote file] and [local file] ..."; return; fi
-    PublicIp=$(aws-get-ins-ip ${1} 0)
+    publicIp=$(aws-get-ins-ip ${1})
     RemoteFile=${2}
     LocalFile=${3}
-    scp -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} \
-        ${SSH_USER}@${PublicIp}:${RemoteFile} ${LocalFile}
+    scp ${SSH_PARAMETERS} ${SSH_USER}@${publicIp}:${RemoteFile} ${LocalFile}
 }
 
 # Setup socks5 proxy
@@ -220,68 +229,74 @@ function aws-copy-file-from
 function aws-socks5-proxy
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
-    PublicIp=$(aws-get-ins-ip ${1} 0)
+    publicIp=$(aws-get-ins-ip ${1})
     ProxyLocalPort=${2:-${PROXY_LOCAL_PORT}}
     ProxyRemotePort=22
     # Kill existing port forwarding process
     for pid in $(ps aux | grep "CfNgD ${ProxyLocalPort}" | grep -v grep | awk "{print \$2}"); do
         kill -9 ${pid}
     done
-    ssh -o 'UserKnownHostsFile /dev/null' -o 'StrictHostKeyChecking no' -i ${SSH_KEY_PATH} \
-        -CfNgD ${ProxyLocalPort} -p ${ProxyRemotePort} ${SSH_USER}@${PublicIp}
+    ssh ${SSH_PARAMETERS} -CfNgD ${ProxyLocalPort} -p ${ProxyRemotePort} ${SSH_USER}@${publicIp}
 }
 
 ## Private Functions ##
-# Minus input number by one and print
-function _minus_one
+# Plus input number by one
+function _plus_one
 {
-    declare -i num=0
-    if [ "${1}" != "" ]; then num="${1}-1"; echo ${num}; else echo "*"; fi
+    declare -i num="${1}+1"
+    printf "%02d" ${num}
 }
-# Remove the surrounding quotes in string
+# Remove any special symbol in string
 function _extract_info
 {
     matchStr="[.a-zA-Z0-9-]\+"
     echo ${1} | grep -o "${matchStr}"
 }
-# Judge whether input content is a number
-function _is_num
+# Judge whether input content is an instance id
+function _is_ins_id
 {
-    if [ "$(echo ${1} | grep '^[0-9]*$')" ]; then return ${SUCCEED}; else return ${FAILED}; fi
+    if [ "$(echo ${1} | grep '^i-[0-9a-z]\{8,\}$')" ]; then echo "${SUCCEED}"; else echo "${FAILED}"; fi
 }
-# Given an instance id or name, return its instance id
+# Get instance id by instance name/id
 function _aws_get_ins_id
 {
-    if [ "$(echo ${1} | grep '^i-[0-9a-z]\{8,\}$')" ]; then echo ${1}; else aws-get-ins-id ${1}; fi
+    if [ "$(_is_ins_id ${1})" = "${SUCCEED}" ]; then
+        echo ${1}
+    else
+        echo $(aws-get-ins-id ${1})
+    fi
 }
-# Get instance information with indexed query
-function _aws_get_ins_desc_via_index
+# Perform an ec2 action
+# [Parameters]
+# $1 - instance name/id
+# $1 - action name
+# $2 - query string
+function _aws_ec2_action
 {
-    queryStr="${1}"
-    res=$(aws ec2 describe-instances --query "${queryStr}")
-    echo $(_extract_info ${res})
+    insId=$(_aws_get_ins_id ${1})
+    res=$(aws ec2 ${2} --instance-ids ${insId} --query "${3}[0].CurrentState.Name")
+    echo "${insId} -> $(_extract_info ${res})"
 }
-# Get instance information with specified named query
-function _aws_get_ins_desc_via_tag_name
-{
-    queryStr="${1}"
-    insName=${2}
-    res=$(aws ec2 describe-instances --query "${queryStr}" --filter Name=tag:Name,Values=${insName})
-    echo $(_extract_info ${res})
-}
-# Get instance information according to query parameter
+# Get instance information according to query parameters
+# [Parameters]
+# $1 - query string
+# $2 - instance name or id
+# [Return]
+# Queried information
 function _aws_ins_desc_wrap
 {
-    insQuery="${1}"
-    _is_num ${2}
-    if [ "$?" = "${SUCCEED}" ] || [ "${2}" = "" ]; then
-        resNum=$(_minus_one ${2})
-        insNum=$(_minus_one ${3})
-        queryStr="Reservations[${resNum}].Instances[${insNum}].${insQuery}"
-        echo $(_aws_get_ins_desc_via_index ${queryStr})
+    if [ "${2}" = "" ]; then
+        indexSign="*"
+        extraParams=""
     else
-        insName=${2}
-        queryStr="Reservations[0].Instances[0].${insQuery}"
-        echo $(_aws_get_ins_desc_via_tag_name ${queryStr} ${insName})
+        indexSign="0"
+        if [ "$(_is_ins_id ${2})" = "${SUCCEED}" ]; then
+            extraParams=("--instance-ids" "${2}")
+        else
+            extraParams=("--filter" "Name=tag:Name,Values=${2}")
+        fi
     fi
+    queryStr="Reservations[${indexSign}].Instances[${indexSign}].${1}"
+    res=$(aws ec2 describe-instances --query "${queryStr}" ${extraParams})
+    echo $(_extract_info ${res}) | sed 's/ / | /g'
 }

@@ -114,36 +114,39 @@ function aws-bulk-create-ins
 # [Parameters]
 # $1 - name or id of instance
 # [Return]
-# Current and previous status of specified instance
+# Current status of specified instance
 function aws-start-ins
 {
     if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
     InstanceId=$(_aws_get_ins_id ${1} 0)
-    aws ec2 start-instances --instance-ids ${InstanceId}
+    res=$(aws ec2 start-instances --instance-ids ${InstanceId} --query 'StartingInstances[0].CurrentState.Name')
+    echo "${InstanceId} -> $(_extract_info ${res})"
 }
 
 # Stop specified instance
 # [Parameters]
 # $1 - name or id of instance
 # [Return]
-# Current and previous status of specified instance
+# Current status of specified instance
 function aws-stop-ins
 {
     if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
     InstanceId=$(_aws_get_ins_id ${1} 0)
-    aws ec2 stop-instances --instance-ids ${InstanceId}
+    res=$(aws ec2 stop-instances --instance-ids ${InstanceId} --query 'StoppingInstances[0].CurrentState.Name')
+    echo "${InstanceId} -> $(_extract_info ${res})"
 }
 
 # Terminate specified instance
 # [Parameters]
 # $1 - name or id of instance
 # [Return]
-# Current and previous status of specified instance
+# Current status of specified instance
 function aws-terminate-ins
 {
     if [ "${1}" = "" ]; then echo "Need specify a instance name/id ..."; return; fi
     InstanceId=$(_aws_get_ins_id ${1} 0)
-    aws ec2 terminate-instances --instance-ids ${InstanceId}
+    res=$(aws ec2 terminate-instances --instance-ids ${InstanceId} --query 'TerminatingInstances[0].CurrentState.Name')
+    echo "${InstanceId} -> $(_extract_info ${res})"
 }
 
 # SSH into specified instance

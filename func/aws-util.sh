@@ -26,7 +26,7 @@ BLOCK_DEVICE_MAPPINGS="[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":${
 # Get IP address of managed instances
 # [Parameters]
 # If no paremeters specified, all instances available will returned
-# If one paremeter specified, it means only show instance of specified name/id
+# If one paremeter specified, it means only show instance of specified name
 # If two paremeter specified, they are reservation-index and instance-index
 # [Return]
 # List of instance IPs
@@ -104,10 +104,10 @@ function aws-bulk-create-ins
     if [ "${2}" = "" ]; then echo "Need specify [instance count] and [instance name prefix] ..."; return; fi
     insCount=${1}
     insNamePrefix=${2}
-    InstanceId=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count ${insCount} \
+    InstanceIds=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count ${insCount} \
         --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --block-device-mappings ${BLOCK_DEVICE_MAPPINGS} \
-        --query 'Reservations[].Instances[].InstanceId');
-    echo ${InstanceId}
+        --query 'Instances[].InstanceId');
+    echo ${InstanceIds}
 }
 
 # Start specified instance

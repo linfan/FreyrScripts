@@ -24,6 +24,97 @@ SSH_PARAMETERS=("-o" "UserKnownHostsFile /dev/null" "-o" "StrictHostKeyChecking 
 
 ## Public Functions ##
 
+# List all available regions
+function aws-list-regions
+{
+    cat <<EOF
+----------------------------------------------
+| AWS Region Name          | Region Code     |
+----------------------------------------------
+| US East (N. Virginia)    | us-east-1       |
+| US East (Ohio)           | us-east-2       |
+| US West (N. California)  | us-west-1       |
+| US West (Oregon)         | us-west-2       |
+| EU (Ireland)             | eu-west-1       |
+| EU (Frankfurt)           | eu-central-1    |
+| Asia Pacific (Tokyo)     | ap-northeast-1  |
+| Asia Pacific (Seoul)     | ap-northeast-2  |
+| Asia Pacific (Singapore) | ap-southeast-1  |
+| Asia Pacific (Sydney)    | ap-southeast-2  |
+| Asia Pacific (Mumbai)    | ap-south-1      |
+| South America (São Paulo)| sa-east-1       |
+----------------------------------------------
+EOF
+}
+
+# Switch between regions
+# [Parameters]
+# $1 - target region code
+# [Return]
+# None
+function aws-switch-region
+{
+    if [ "${1}" = "" ]; then echo "Need specify target region ..."; return; fi
+    _sed_i "s/^region =.*$/region = ${1}/" ${HOME}/.aws/config
+}
+
+# List all saved accounts
+function aws-list-account
+{
+    ls ${HOME}/.aws/ | grep 'credentials\.' | grep -o '[^\.]*$'
+}
+
+# Save current account used specified name
+# [Parameters]
+# $1 - account name to save as
+# [Return]
+# Saved result
+function aws-save-account
+{
+    if [ "${1}" = "" ]; then echo "Need specify an account name ..."; return; fi
+    target=${HOME}/.aws/credentials.${1}
+    if [ -e ${target} ]; then
+        echo "Account [${1}] already exist, explicitly delete it before save."
+    else
+        _cp_f ${HOME}/.aws/credentials ${target}
+        echo "Account [${1}] saved (as ${target})."
+    fi
+}
+
+# Switch to specified account
+# [Parameters]
+# $1 - target account name
+# [Return]
+# Switch result
+function aws-switch-account
+{
+    if [ "${1}" = "" ]; then echo "Need specify target account name ..."; return; fi
+    target=${HOME}/.aws/credentials.${1}
+    if [ -e ${target} ]; then
+        _cp_f ${target} ${HOME}/.aws/credentials
+        echo "Now using account [${1}]."
+    else
+        echo "[ERR] Account [${1}] does not exist !"
+    fi
+}
+
+# Delete specified account
+# [Parameters]
+# $1 - account name to delete
+# [Return]
+# Delete result
+function aws-delete-account
+{
+    if [ "${1}" = "" ]; then echo "Need specify an account name ..."; return; fi
+    target=${HOME}/.aws/credentials.${1}
+    if [ -e ${target} ]; then
+        _rm_f ${target}
+        echo "Account [${1}] deleted."
+    else
+        echo "[ERR] Account [${1}] does not exist !"
+    fi
+}
+
 # Get IP address of managed instances
 # [Parameters]
 # $1 - instance name/id (optional)
@@ -172,7 +263,7 @@ function aws-bulk-exec
     insNames=(`echo ${insNames}`)
     for ins in ${insNames}; do
         ip=$(aws-get-ins-ip ${ins})
-        ssh ${SSH_PARAMETERS} ${SSH_USER}@${ip} sh -c "\"${cmdToExec}\""
+        ssh ${SSH_PARAMETERS} ${SSH_USER}@${ip} sh -c "\"${cmdToExec}\"" &
     done
 }
 
@@ -240,6 +331,25 @@ function aws-socks5-proxy
 }
 
 ## Private Functions ##
+# The 'sed -i' function fit both Linux and MacOS
+function _sed_i
+{
+    if [ "$(uname)" = "Darwin" ]; then
+        sed -i '' ${@}
+    else
+        sed -i ${@}
+    fi
+}
+# Delete file without confirmation
+function _rm_f
+{
+    /bin/rm -f ${@}
+}
+# Copy file without confirmation
+function _cp_f
+{
+    /bin/cp -f ${@}
+}
 # Plus input number by one
 function _plus_one
 {

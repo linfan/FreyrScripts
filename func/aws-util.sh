@@ -12,6 +12,7 @@ SEC_GRP_ID=<your-security-group-id>
 SSH_KEY_NAME=<your-ssh-key-name>
 SSH_KEY_PATH=/path/to/your/ssh_key.pem
 SSH_USER=ubuntu
+BOOT_DIST=sda1
 DISK_SIZE_IN_GB=8
 PROXY_LOCAL_PORT=22001
 
@@ -19,7 +20,7 @@ PROXY_LOCAL_PORT=22001
 
 FAILED=-1
 SUCCEED=0
-BLOCK_DEVICE_MAPPINGS="[{\"DeviceName\":\"/dev/sda1\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}]"
+BLOCK_DEVICE_MAPPINGS="[{\"DeviceName\":\"/dev/${BOOT_DIST}\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}]"
 SSH_PARAMETERS=("-o" "UserKnownHostsFile /dev/null" "-o" "StrictHostKeyChecking no" "-i" "${SSH_KEY_PATH}")
 
 ## Public Functions ##
@@ -263,7 +264,7 @@ function aws-bulk-exec
     insNames=(`echo ${insNames}`)
     for ins in ${insNames}; do
         ip=$(aws-get-ins-ip ${ins})
-        ssh ${SSH_PARAMETERS} ${SSH_USER}@${ip} sh -c "\"${cmdToExec}\"" &
+        ssh ${SSH_PARAMETERS} ${SSH_USER}@${ip} sh -c "\"${cmdToExec}\""
     done
 }
 

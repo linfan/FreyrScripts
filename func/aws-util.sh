@@ -118,42 +118,42 @@ function aws-delete-account
 
 # Get IP address of managed instances
 # [Parameters]
-# $1 - instance name/id (optional)
+# ${1}...${n} - list of instance name/id (optional)
 # [Return]
 # List of instance IPs
 function aws-get-ins-ip
 {
-    _aws_ins_desc_wrap 'PublicIpAddress' ${1}
+    _aws_ins_desc_wrap 'PublicIpAddress' ${*}
 }
 
 # Get ID of managed instances
 # [Parameters]
-# $1 - instance name/id (optional)
+# ${1}...${n} - list of instance name/id (optional)
 # [Return]
 # List of instance IDs
 function aws-get-ins-id
 {
-    _aws_ins_desc_wrap 'InstanceId' ${1}
+    _aws_ins_desc_wrap 'InstanceId' ${*}
 }
 
 # Get status of managed instances
 # [Parameters]
-# $1 - instance name/id (optional)
+# ${1}...${n} - list instance name/id (optional)
 # [Return]
 # List of instance status
 function aws-get-ins-status
 {
-    _aws_ins_desc_wrap 'State.Name' ${1}
+    _aws_ins_desc_wrap 'State.Name' ${*}
 }
 
 # Get name of managed instances
 # [Parameters]
-# $1 - instance name/id (optional)
+# ${1}...${n} - list of instance name/id (optional)
 # [Return]
 # List of instance names
 function aws-get-ins-name
 {
-    _aws_ins_desc_wrap 'Tags[*].Value' ${1}
+    _aws_ins_desc_wrap 'Tags[*].Value' ${*}
 }
 
 # Rename specified instance
@@ -388,26 +388,39 @@ function _aws_ec2_action
     res=$(aws ec2 ${2} --instance-ids ${insId} --query "${3}[0].CurrentState.Name")
     echo "${insId} -> $(_extract_info ${res})"
 }
-# Get instance information according to query parameters
+# Get instances information according to query parameter
 # [Parameters]
-# $1 - query string
-# $2 - instance name or id
+# $1 - query parameter
+# ${2}...${n} - list of instance name or id
 # [Return]
 # Queried information
 function _aws_ins_desc_wrap
 {
-    if [ "${2}" = "" ]; then
-        indexSign="*"
-        extraParams=""
-    else
-        indexSign="0"
-        if [ "$(_is_ins_id ${2})" = "${SUCCEED}" ]; then
-            extraParams=("--instance-ids" "${2}")
+    queryPara=${1}
+    shift
+    if [ "${1}" = "" ]; then _aws_ins_desc ${queryPara} "*"; fi
+    for i in ${*}; do
+        if [ "$(_is_ins_id ${i})" = "${SUCCEED}" ]; then
+            extraParams=("--instance-ids" "${i}")
         else
-            extraParams=("--filter" "Name=tag:Name,Values=${2}")
+            extraParams=("--filter" "Name=tag:Name,Values=${i}")
         fi
-    fi
-    queryStr="Reservations[${indexSign}].Instances[${indexSign}].${1}"
-    res=$(aws ec2 describe-instances --query "${queryStr}" ${extraParams})
+        _aws_ins_desc ${queryPara} "0" ${extraParams}
+    done
+}
+# Get one instance information according to query parameter
+# [Parameters]
+# $1 - query parameter
+# $2 - query item index
+# ${3}...${n} - extra query parameter
+# [Return]
+# Queried information
+function _aws_ins_desc
+{
+    queryPara=${1}
+    indexSign=${2}
+    shift 2
+    queryStr="Reservations[${indexSign}].Instances[${indexSign}].${queryPara}"
+    res=$(aws ec2 describe-instances --query "${queryStr}" ${@})
     echo $(_extract_info ${res}) | sed 's/ / | /g'
 }

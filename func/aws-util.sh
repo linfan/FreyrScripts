@@ -360,7 +360,7 @@ function _plus_one
 # Remove any special symbol in string
 function _extract_info
 {
-    matchStr="[.a-zA-Z0-9-]\+"
+    matchStr="[.a-zA-Z0-9_\-]\+"
     echo ${1} | grep -o "${matchStr}"
 }
 # Judge whether input content is an instance id

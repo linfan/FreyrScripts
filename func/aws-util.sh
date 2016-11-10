@@ -173,18 +173,20 @@ function aws-rename-ins
 
 # Create new instance with default configure
 # [Parameters]
-# $1 - name of instance
+# ${1}...${n} - name list of instances
 # [Return]
 # ID of the new instance
 function aws-create-ins
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
-    insName=${1}
-    insId=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count 1 \
-        --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --block-device-mappings ${BLOCK_DEVICE_MAPPINGS} \
-        --query 'Instances[0].InstanceId');
-    insId=$(_extract_info ${insId})
-    aws-rename-ins ${insId} ${insName}
+    for i in ${@}; do
+        insName=${i}
+        insId=$(aws ec2 run-instances --image-id ${IMG_ID} --security-group-ids ${SEC_GRP_ID} --count 1 \
+            --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} --block-device-mappings ${BLOCK_DEVICE_MAPPINGS} \
+            --query 'Instances[0].InstanceId');
+        insId=$(_extract_info ${insId})
+        aws-rename-ins ${insId} ${insName}
+    done
 }
 
 # Create many new instances with default configure at once

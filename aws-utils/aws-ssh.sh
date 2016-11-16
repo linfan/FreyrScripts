@@ -23,7 +23,7 @@ function aws-ssh-to
 # $3 - remote path
 # [Return]
 # None
-function aws-copy-file-to
+function aws-ssh-copy-to
 {
     if [ "${3}" = "" ]; then echo "Need specify [instance name], [local file] and [remote file] ..."; return; fi
     publicIp=$(aws-ins-get-ip ${1})
@@ -39,7 +39,7 @@ function aws-copy-file-to
 # $3 - local path
 # [Return]
 # None
-function aws-copy-file-from
+function aws-ssh-copy-from
 {
     if [ "${3}" = "" ]; then echo "Need specify [instance name], [remote file] and [local file] ..."; return; fi
     publicIp=$(aws-ins-get-ip ${1})
@@ -54,7 +54,7 @@ function aws-copy-file-from
 # $2 - proxy local port (optional)
 # [Return]
 # None
-function aws-socks5-proxy
+function aws-ssh-proxy
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
     publicIp=$(aws-ins-get-ip ${1})

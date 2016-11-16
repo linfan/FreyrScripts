@@ -6,7 +6,7 @@ Bash scripts to simplify aws ec2 operation
 These scripts need 'aws' cli, install and configure it via:
 
 ```
-$ pip install aws
+$ pip install awscli
 $ aws configure
 ```
 

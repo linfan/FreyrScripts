@@ -14,8 +14,8 @@ DEFAULT_PROFILE_FILE="${PROFILE_FOLDER}/default"
 
 if [ ! -d ${PROFILE_FOLDER} ]; then mkdir -p ${PROFILE_FOLDER}; fi
 if [ ! -e ${DEFAULT_PROFILE_FILE} ]; then cat <<EOF >${DEFAULT_PROFILE_FILE}
-AWS_REGION=ap-northeast-2
-AWS_ACCOUNT=flin
+AWS_REGION=
+AWS_ACCOUNT=
 INS_TYPE=t2.micro
 DISK_SIZE_IN_GB=8
 PROXY_LOCAL_PORT=22000
@@ -23,7 +23,7 @@ SSH_USER=ubuntu
 USER_DATA_FILE=
 BOOT_DISK=sda1
 SEC_GRP_ID=default
-IMG_ID=ami-a9f63cc7    # Seoul Ubuntu 16.04
+IMG_ID=ami-12345678
 SSH_KEY_NAME=flin
 SSH_KEY_PATH=${HOME}/.ssh/flin.pem
 EOF
@@ -49,8 +49,8 @@ function aws-profile-apply
     profileFile="${PROFILE_FOLDER}/${profileName}.profile"
     if [ -e ${profileFile} ]; then
         source ${profileFile}
-        aws-account-switch ${AWS_REGION}
-        aws-region-switch ${AWS_REGION}
+        if [ "${AWS_ACCOUNT}" != "" ]; then aws-account-switch ${AWS_ACCOUNT}; fi
+        if [ "${AWS_REGION}" != "" ]; then aws-region-switch ${AWS_REGION}; fi
         echo "Profile ${profileName} applied."
     else
         echo "[ERR] Profile ${profileName} not exist !"

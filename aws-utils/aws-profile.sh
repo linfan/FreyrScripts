@@ -32,6 +32,40 @@ source ${DEFAULT_PROFILE_FILE}
 
 ## Public Functions ##
 
+# Show current profile config
+# [Parameters]
+# None
+function aws-profile-view
+{
+    cat <<EOF
+AWS_REGION=${AWS_REGION}
+AWS_ACCOUNT=${AWS_ACCOUNT}
+INS_TYPE=${INS_TYPE}
+DISK_SIZE_IN_GB=${DISK_SIZE_IN_GB}
+PROXY_LOCAL_PORT=${PROXY_LOCAL_PORT}
+SSH_USER=${SSH_USER}
+USER_DATA_FILE=${USER_DATA_FILE}
+BOOT_DISK=${BOOT_DISK}
+SEC_GRP_ID=${SEC_GRP_ID}
+IMG_ID=${IMG_ID}
+SSH_KEY_NAME=${SSH_KEY_NAME}
+SSH_KEY_PATH=${SSH_KEY_PATH}
+EOF
+}
+
+# Save current profile as default config
+# [Parameters]
+# None
+function aws-profile-save
+{
+    printf "Overwrite default profile config ? (N/Y) " 
+    read COMFIRM_OVERWRITE
+    if [[ "${COMFIRM_OVERWRITE}" = "y" || "${COMFIRM_OVERWRITE}" = "Y" ]]; then
+        aws-profile-view > ${DEFAULT_PROFILE_FILE}
+        echo "Profile saved as default config."
+    fi
+}
+
 # List all available profiles
 # [Parameters]
 # None

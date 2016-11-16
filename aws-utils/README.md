@@ -50,6 +50,8 @@ for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
 
 ### aws-profile.sh
 - aws-profile-list
+- aws-profile-view
+- aws-profile-save
 - aws-profile-apply
 - aws-profile-create
 - aws-profile-edit

@@ -41,7 +41,7 @@ for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
 ### aws-account.sh
 - aws-account-list
 - aws-account-switch
-- aws-account-save
+- aws-account-save-as
 - aws-account-delete
 
 ### aws-region.sh
@@ -57,3 +57,12 @@ for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
 - aws-profile-edit
 - aws-profile-delete
 
+## Dependence between scripts
+
+There is no bidirection dependence among those scripts.
+The dependence order describe as below:
+
+- all scripts depend on `aws-private`
+- `aws-profile` depend on `aws-region` and `aws-account`
+- `aws-ec2` depend on `aws-profile`
+- `aws-ssh` depend on `aws-ec2`

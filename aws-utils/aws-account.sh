@@ -11,7 +11,7 @@ function aws-account-list
 # $1 - account name to save as
 # [Return]
 # Saved result
-function aws-account-save
+function aws-account-save-as
 {
     if [ "${1}" = "" ]; then echo "Need specify an account name ..."; return; fi
     target=${HOME}/.aws/credentials.${1}

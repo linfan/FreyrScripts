@@ -135,21 +135,3 @@ function aws-ins-terminate
         _aws_ec2_action ${ins} "terminate-instances" "TerminatingInstances"
     done
 }
-
-# Execute a command on all given instances parallelly
-# [Parameters]
-# ${1}..${n-1} - name/id of instance
-# ${n} - command to execute
-# [Return]
-# Execute outputs
-function aws-ins-bulk-exec
-{
-    if [ "${2}" = "" ]; then echo "Need at least an instance name/id and a comamnd ..."; return; fi
-    cmdToExec=$(echo ${@[-1]})
-    insNames=${@[@]:1:${#@[@]}-1}
-    insNames=(`echo ${insNames}`)
-    for ins in ${insNames}; do
-        ip=$(aws-ins-get-ip ${ins})
-        ssh ${SSH_PARAMETERS} ${SSH_USER}@${ip} sh -c "\"${cmdToExec}\""
-    done
-}

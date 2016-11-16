@@ -21,7 +21,6 @@ for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
 
 ### aws-ec2.sh
 - aws-ins-bulk-create
-- aws-ins-bulk-exec
 - aws-ins-create
 - aws-ins-get-id
 - aws-ins-get-ip
@@ -33,6 +32,7 @@ for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
 - aws-ins-terminate
 
 ### aws-ssh.sh
+- aws-ssh-bulk-exec
 - aws-ssh-copy-from
 - aws-ssh-copy-to
 - aws-ssh-proxy

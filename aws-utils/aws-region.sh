@@ -1,7 +1,7 @@
 ## Public Functions ##
 
 # List all available regions
-function aws-regions-list
+function aws-region-list
 {
     cat <<EOF
 ----------------------------------------------

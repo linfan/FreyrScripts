@@ -20,38 +20,38 @@ for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
 ## Functions provided by these scripts
 
 ### aws-ec2.sh
-- aws-ins-bulk-create
 - aws-ins-create
+- aws-ins-bulk-create
+- aws-ins-rename
 - aws-ins-get-id
 - aws-ins-get-ip
 - aws-ins-get-name
 - aws-ins-get-status
-- aws-ins-rename
 - aws-ins-start
 - aws-ins-stop
 - aws-ins-terminate
 
 ### aws-ssh.sh
-- aws-ssh-bulk-exec
+- aws-ssh-to
 - aws-ssh-copy-from
 - aws-ssh-copy-to
 - aws-ssh-proxy
-- aws-ssh-to
+- aws-ssh-bulk-exec
 
 ### aws-account.sh
-- aws-account-delete
 - aws-account-list
-- aws-account-save
 - aws-account-switch
+- aws-account-save
+- aws-account-delete
 
 ### aws-region.sh
+- aws-region-list
 - aws-region-switch
-- aws-regions-list
 
 ### aws-profile.sh
+- aws-profile-list
 - aws-profile-apply
 - aws-profile-create
-- aws-profile-delete
 - aws-profile-edit
-- aws-profile-list
+- aws-profile-delete
 

@@ -35,7 +35,7 @@ source ${DEFAULT_PROFILE_FILE}
 # Show current profile config
 # [Parameters]
 # None
-function aws-profile-view
+function aws-profile-show
 {
     cat <<EOF
 AWS_REGION=${AWS_REGION}

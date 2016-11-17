@@ -13,7 +13,7 @@ $ aws configure
 
 Add below line in your `.bashrc` or `.zshrc` file to auto load these commands:
 ```
-for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
+source ~/Scripts/aws-utils/init.sh
 ```
 > PS: Change `~/Scripts` to other folder which content script files.
 
@@ -49,9 +49,9 @@ for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
 - aws-region-switch
 
 ### aws-profile.sh
-- aws-profile-list
-- aws-profile-view
+- aws-profile-show
 - aws-profile-save
+- aws-profile-list
 - aws-profile-apply
 - aws-profile-create
 - aws-profile-edit
@@ -62,7 +62,7 @@ for f in `ls ~/Scripts/aws-utils/*.sh`; do source $f; done
 There is no bidirection dependence among those scripts.
 The dependence order describe as below:
 
-- all scripts depend on `aws-private`
+- all scripts can depend on `aws-util`
 - `aws-profile` depend on `aws-region` and `aws-account`
 - `aws-ec2` depend on `aws-profile`
 - `aws-ssh` depend on `aws-ec2`

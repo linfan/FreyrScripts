@@ -1,0 +1,42 @@
+## Global Constant ##
+
+FAILED=-1
+SUCCEED=0
+
+## Private Functions ##
+
+# The 'sed -i' function fit both Linux and MacOS
+function _sed_i
+{
+    if [ "$(uname)" = "Darwin" ]; then
+        sed -i '' ${@}
+    else
+        sed -i ${@}
+    fi
+}
+
+# Delete file without confirmation
+function _rm_f
+{
+    /bin/rm -f ${@}
+}
+
+# Copy file without confirmation
+function _cp_f
+{
+    /bin/cp -f ${@}
+}
+
+# Plus input number by one
+function _plus_one
+{
+    declare -i num="${1}+1"
+    printf "%02d" ${num}
+}
+
+# Remove any special symbol in string
+function _extract_info
+{
+    matchStr="[.a-zA-Z0-9_\-]\+"
+    echo ${1} | grep -o "${matchStr}"
+}

@@ -1,7 +1,3 @@
-## Global Constant ##
-
-BLOCK_DEVICE_MAPPINGS="{\"DeviceName\":\"/dev/${BOOT_DISK}\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}"
-
 ## Private Functions ##
 
 # Judge whether input content is an instance id

@@ -40,3 +40,8 @@ function _extract_info
     matchStr="[.a-zA-Z0-9_\-]\+"
     echo ${1} | grep -o "${matchStr}"
 }
+
+function _update_ec2_device_config
+{
+    BLOCK_DEVICE_MAPPINGS="{\"DeviceName\":\"/dev/${BOOT_DISK}\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}"
+}

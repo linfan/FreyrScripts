@@ -51,9 +51,9 @@ source ~/Scripts/aws-utils/init.sh
 ### aws-profile.sh
 - aws-profile-show
 - aws-profile-save
+- aws-profile-save-to
 - aws-profile-list
 - aws-profile-apply
-- aws-profile-create
 - aws-profile-edit
 - aws-profile-delete
 

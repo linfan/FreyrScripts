@@ -67,6 +67,17 @@ function aws-profile-save
     fi
 }
 
+# Save current config to a new profile
+# [Parameters]
+# $1 - name of profile to save
+function aws-profile-save-as
+{
+    profileName=${1}
+    profileFile="${PROFILE_FOLDER}/${profileName}.profile"
+    aws-profile-show > ${profileFile}
+    echo "Profile saved as \"${profileName}\""
+}
+
 # List all available profiles
 # [Parameters]
 # None
@@ -93,29 +104,17 @@ function aws-profile-apply
     fi
 }
 
-# Create a new user profile
-# [Parameters]
-# $1 - name of profile
-function aws-profile-create
-{
-    profileName=${1}
-    profileFile="${PROFILE_FOLDER}/${profileName}.profile"
-    if [ -e ${profileFile} ]; then
-        echo "[ERR] Profile ${profileName} already exist !"
-    else
-        cp ${DEFAULT_PROFILE_FILE} ${profileFile}
-        _sed_i 's/=.*$/=/g' ${profileFile}
-        aws-profile-edit ${profileName}
-    fi
-}
-
 # Edit an user profile
 # [Parameters]
-# $1 - name of profile
+# $1 - name of profile, null for default profile
 function aws-profile-edit
 {
     profileName=${1}
-    profileFile="${PROFILE_FOLDER}/${profileName}.profile"
+    if [ "${profileName}" = "" ]; then
+        profileFile="${DEFAULT_PROFILE_FILE}"
+    else
+        profileFile="${PROFILE_FOLDER}/${profileName}.profile"
+    fi
     if [ -e ${profileFile} ]; then
         EDITOR=${EDITOR:-vi}
         ${EDITOR} ${profileFile}

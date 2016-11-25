@@ -1,7 +1,3 @@
-## Global Constant ##
-
-SSH_PARAMETERS=("-o" "UserKnownHostsFile /dev/null" "-o" "StrictHostKeyChecking no" "-i" "${SSH_KEY_PATH}")
-
 ## Public Functions ##
 
 # SSH into specified instance

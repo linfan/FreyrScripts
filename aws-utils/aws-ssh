@@ -8,7 +8,7 @@
 function aws-ssh-to
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
-    publicIp=$(aws-ins-get-ip ${1})
+    publicIp=$(aws-ec2-get-ip ${1})
     ssh ${SSH_PARAMETERS} ${SSH_USER}@${publicIp}
 }
 
@@ -22,7 +22,7 @@ function aws-ssh-to
 function aws-ssh-copy-to
 {
     if [ "${3}" = "" ]; then echo "Need specify [instance name], [local file] and [remote file] ..."; return; fi
-    publicIp=$(aws-ins-get-ip ${1})
+    publicIp=$(aws-ec2-get-ip ${1})
     LocalFile=${2}
     RemoteFile=${3}
     scp ${SSH_PARAMETERS} ${LocalFile} ${SSH_USER}@${publicIp}:${RemoteFile}
@@ -38,7 +38,7 @@ function aws-ssh-copy-to
 function aws-ssh-copy-from
 {
     if [ "${3}" = "" ]; then echo "Need specify [instance name], [remote file] and [local file] ..."; return; fi
-    publicIp=$(aws-ins-get-ip ${1})
+    publicIp=$(aws-ec2-get-ip ${1})
     RemoteFile=${2}
     LocalFile=${3}
     scp ${SSH_PARAMETERS} ${SSH_USER}@${publicIp}:${RemoteFile} ${LocalFile}
@@ -53,7 +53,7 @@ function aws-ssh-copy-from
 function aws-ssh-proxy
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
-    publicIp=$(aws-ins-get-ip ${1})
+    publicIp=$(aws-ec2-get-ip ${1})
     ProxyLocalPort=${2:-${PROXY_LOCAL_PORT}}
     ProxyRemotePort=22
     # Kill existing port forwarding process
@@ -76,7 +76,7 @@ function aws-ssh-bulk-exec
     insNames=${@[@]:1:${#@[@]}-1}
     insNames=(`echo ${insNames}`)
     for ins in ${insNames}; do
-        ip=$(aws-ins-get-ip ${ins})
+        ip=$(aws-ec2-get-ip ${ins})
         ssh ${SSH_PARAMETERS} ${SSH_USER}@${ip} sh -c "\"${cmdToExec}\""
     done
 }

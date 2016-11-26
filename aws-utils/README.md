@@ -20,16 +20,16 @@ source ~/Scripts/aws-utils/init.sh
 ## Functions provided by these scripts
 
 ### aws-ec2.sh
-- aws-ins-create
-- aws-ins-bulk-create
-- aws-ins-rename
-- aws-ins-get-id
-- aws-ins-get-ip
-- aws-ins-get-name
-- aws-ins-get-status
-- aws-ins-start
-- aws-ins-stop
-- aws-ins-terminate
+- aws-ec2-create
+- aws-ec2-bulk-create
+- aws-ec2-rename
+- aws-ec2-get-id
+- aws-ec2-get-ip
+- aws-ec2-get-name
+- aws-ec2-get-status
+- aws-ec2-start
+- aws-ec2-stop
+- aws-ec2-terminate
 
 ### aws-ssh.sh
 - aws-ssh-to

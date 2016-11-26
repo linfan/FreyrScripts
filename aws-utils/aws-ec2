@@ -212,7 +212,11 @@ function aws-ec2-stop
 function aws-ec2-terminate
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
-    for ins in ${@}; do
-        _aws_ec2_action ${ins} "terminate-instances" "TerminatingInstances"
-    done
+    printf "All unsaved data will lost, sure terminate instances ? (N/Y) " 
+    read COMFIRM_TERMINATE
+    if [[ "${COMFIRM_TERMINATE}" = "y" || "${COMFIRM_TERMINATE}" = "Y" ]]; then
+        for ins in ${@}; do
+            _aws_ec2_action ${ins} "terminate-instances" "TerminatingInstances"
+        done
+    fi
 }

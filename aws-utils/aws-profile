@@ -65,19 +65,22 @@ function aws-profile-list
     ls ${PROFILE_FOLDER} | grep '\.profile$' | grep -o '^[^.]\+'
 }
 
-# Apply an user profile
+# Apply user profiles
 # [Parameters]
-# $1 - name of profile
+# ${1} - list of profile names to apply
 function aws-profile-apply
 {
-    profileName=${1}
-    profileFile="${PROFILE_FOLDER}/${profileName}.profile"
-    if [ -e ${profileFile} ]; then
-        _source_profile_file ${profileFile}
-        echo "Profile ${profileName} applied."
-    else
-        echo "[ERR] Profile ${profileName} not exist !"
-    fi
+    if [ "${1}" = "" ]; then echo "At least one profile name needed ..."; return; fi
+    for p in ${*}; do
+        profileName=${p}
+        profileFile="${PROFILE_FOLDER}/${profileName}.profile"
+        if [ -e ${profileFile} ]; then
+            _source_profile_file ${profileFile}
+            echo "Profile ${profileName} applied."
+        else
+            echo "[ERR] Profile ${profileName} not exist !"
+        fi
+    done
 }
 
 # Edit current profile

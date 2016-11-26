@@ -10,27 +10,6 @@
 PROFILE_FOLDER="${HOME}/.aws/profiles"
 DEFAULT_PROFILE_FILE="${PROFILE_FOLDER}/default"
 
-## Init Script ##
-
-if [ ! -d ${PROFILE_FOLDER} ]; then mkdir -p ${PROFILE_FOLDER}; fi
-if [ ! -e ${DEFAULT_PROFILE_FILE} ]; then cat <<EOF >${DEFAULT_PROFILE_FILE}
-AWS_REGION=
-AWS_ACCOUNT=
-INS_TYPE=t2.micro
-DISK_SIZE_IN_GB=8
-PROXY_LOCAL_PORT=22000
-SSH_USER=ubuntu
-USER_DATA_FILE=
-BOOT_DISK=sda1
-SEC_GRP_ID=default
-IMG_ID=ami-12345678
-SSH_KEY_NAME=flin
-SSH_KEY_PATH=${HOME}/.ssh/flin.pem
-EOF
-fi
-source ${DEFAULT_PROFILE_FILE}
-_update_global_parameters
-
 ## Public Functions ##
 
 # Show current profile config
@@ -94,33 +73,24 @@ function aws-profile-apply
     profileName=${1}
     profileFile="${PROFILE_FOLDER}/${profileName}.profile"
     if [ -e ${profileFile} ]; then
-        source ${profileFile}
-        _update_global_parameters
-        if [ "${AWS_ACCOUNT}" != "" ]; then aws-account-switch ${AWS_ACCOUNT}; fi
-        if [ "${AWS_REGION}" != "" ]; then aws-region-switch ${AWS_REGION}; fi
+        _source_profile_file ${profileFile}
         echo "Profile ${profileName} applied."
     else
         echo "[ERR] Profile ${profileName} not exist !"
     fi
 }
 
-# Edit an user profile
+# Edit current profile
 # [Parameters]
-# $1 - name of profile, null for default profile
+# None
 function aws-profile-edit
 {
-    profileName=${1}
-    if [ "${profileName}" = "" ]; then
-        profileFile="${DEFAULT_PROFILE_FILE}"
-    else
-        profileFile="${PROFILE_FOLDER}/${profileName}.profile"
-    fi
-    if [ -e ${profileFile} ]; then
-        EDITOR=${EDITOR:-vi}
-        ${EDITOR} ${profileFile}
-    else
-        echo "[ERR] Profile ${profileName} not exist !"
-    fi
+    tmpProfileFile=$(mktemp)
+    aws-profile-show > ${tmpProfileFile}
+    EDITOR=${EDITOR:-vi}
+    ${EDITOR} ${tmpProfileFile}
+    _source_profile_file ${tmpProfileFile}
+    rm -f ${tmpProfileFile}
 }
 
 # Delete an user profile
@@ -137,3 +107,36 @@ function aws-profile-delete
         echo "[ERR] Profile ${profileName} not exist !"
     fi
 }
+
+## Private Functions ##
+
+# Apply specified profile file
+# [Parameters]
+# $1 - profile file path
+function _source_profile_file
+{
+    source ${1}
+    _update_global_parameters
+    if [ "${AWS_ACCOUNT}" != "" ]; then aws-account-switch ${AWS_ACCOUNT}; fi
+    if [ "${AWS_REGION}" != "" ]; then aws-region-switch ${AWS_REGION}; fi
+}
+
+## Init Script ##
+
+if [ ! -d ${PROFILE_FOLDER} ]; then mkdir -p ${PROFILE_FOLDER}; fi
+if [ ! -e ${DEFAULT_PROFILE_FILE} ]; then cat <<EOF >${DEFAULT_PROFILE_FILE}
+AWS_REGION=
+AWS_ACCOUNT=
+INS_TYPE=t2.micro
+DISK_SIZE_IN_GB=8
+PROXY_LOCAL_PORT=22000
+SSH_USER=ubuntu
+USER_DATA_FILE=
+BOOT_DISK=sda1
+SEC_GRP_ID=default
+IMG_ID=ami-12345678
+SSH_KEY_NAME=flin
+SSH_KEY_PATH=${HOME}/.ssh/flin.pem
+EOF
+fi
+_source_profile_file ${DEFAULT_PROFILE_FILE}

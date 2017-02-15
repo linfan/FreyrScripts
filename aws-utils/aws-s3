@@ -1,0 +1,144 @@
+## Public Functions ##
+
+# Create the specified bucket
+# [Parameters]
+# None
+function aws-s3-md
+{
+    aws s3 mb s3://${AWS_S3_BUCKET} --region ${AWS_REGION}
+}
+
+# Delete the specified bucket
+# [Parameters]
+# None
+function aws-s3-rb
+{
+    aws s3 rb s3://${AWS_S3_BUCKET} --force
+}
+
+# List specified path
+# [Parameters]
+# $1 - path to list
+# Or
+# $1 - parameters: -r means 'recursive'
+# $2 - path to list
+function aws-s3-ls
+{
+    if [ "${1}" == "-r" ]; then
+        S3Param="--recursive"
+        S3Path="${2}"
+    else
+        S3Path="${1}"
+    if
+    if [ "${S3Path}" = "" ]; then echo "Need specify a path ..."; return; fi
+    aws s3 ls s3://${AWS_S3_BUCKET}${S3Path} --human-readable --summarize --page-size 1000 ${S3Param}
+}
+
+# Publish a specified file for 1 day
+# [Parameters]
+# $1 - file to publish
+function aws-s3-presign-1-day
+{
+    S3Path="${1}"
+    if [ "${S3Path}" = "" ]; then echo "Need specify a path ..."; return; fi
+    aws s3 presign s3://${AWS_S3_BUCKET}${S3Path} --expires-in 86400
+}
+
+# Create a static website
+# [Parameters]
+# $1 - index html file path
+# $2 - error html file path
+function aws-s3-website
+{
+    IndexHtml="${1}"
+    ErrorHtml="${2}"
+    if [ "${2}" = "" ]; then echo "Need specify index.html and error.html path ..."; return; fi
+    aws s3 website s3://${AWS_S3_BUCKET} --index-document ${IndexHtml} --error-document ${ErrorHtml}
+}
+
+# Remove a file or folder
+# [Parameters]
+# $1 - path to remove
+function aws-s3-rm
+{
+    S3Path="${1}"
+    if [ "${S3Path}" = "" ]; then echo "Need specify a path ..."; return; fi
+    aws s3 rm s3://${AWS_S3_BUCKET}${S3Path} --recursive
+}
+
+# Copy (from local) to s3
+# [Parameters]
+# $1 - local path
+# $2 - s3 path
+function aws-s3-cp-to
+{
+    LocalPath="${1}"
+    S3Path="${2}"
+    aws s3 cp ${LocalPath} s3://${AWS_S3_BUCKET}${S3Path} --recursive
+}
+
+# Copy from s3 (to local)
+# [Parameters]
+# $1 - s3 path
+# $2 - local path
+function aws-s3-cp-from
+{
+    S3Path="${1}"
+    LocalPath="${2}"
+    aws s3 cp s3://${AWS_S3_BUCKET}${S3Path} ${LocalPath} --recursive
+}
+
+# Move (from local) to s3
+# [Parameters]
+# $1 - local path
+# $2 - s3 path
+function aws-s3-cp-to
+{
+    LocalPath="${1}"
+    S3Path="${2}"
+    aws s3 mv ${LocalPath} s3://${AWS_S3_BUCKET}${S3Path} --recursive
+}
+
+# Move from s3 (to local)
+# [Parameters]
+# $1 - s3 path
+# $2 - local path
+function aws-s3-cp-from
+{
+    S3Path="${1}"
+    LocalPath="${2}"
+    aws s3 mv s3://${AWS_S3_BUCKET}${S3Path} ${LocalPath} --recursive
+}
+
+# Sync (from local) to s3
+# [Parameters]
+# $1 - local path
+# $2 - s3 path
+function aws-s3-cp-to
+{
+    LocalPath="${1}"
+    S3Path="${2}"
+    aws s3 sync ${LocalPath} s3://${AWS_S3_BUCKET}${S3Path} --delete
+}
+
+# Sync from s3 (to local)
+# [Parameters]
+# $1 - s3 path
+# $2 - local path
+function aws-s3-cp-from
+{
+    S3Path="${1}"
+    LocalPath="${2}"
+    aws s3 sync s3://${AWS_S3_BUCKET}${S3Path} ${LocalPath} --delete
+}
+
+# PS:
+# Consider authentication paramther '--acl' for cp,mv,sync command
+# - private
+# - public-read
+# - public-read-write
+# - authenticated-read
+# - aws-exec-read
+# - bucket-owner-read
+# - bucket-owner-full-control
+# - log-delivery-write

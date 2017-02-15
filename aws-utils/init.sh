@@ -6,3 +6,4 @@ source ${scriptDir}/aws-region
 source ${scriptDir}/aws-profile
 source ${scriptDir}/aws-ec2
 source ${scriptDir}/aws-ssh
+source ${scriptDir}/aws-s3

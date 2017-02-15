@@ -9,7 +9,7 @@ function aws-ssh-to
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
     publicIp=$(aws-ec2-get-ip ${1})
-    ssh ${SSH_PARAMETERS} ${SSH_USER}@${publicIp}
+    ssh ${SSH_PARAMETERS} ${AWS_SSH_USER}@${publicIp}
 }
 
 # Copy specified file from local to instance
@@ -25,7 +25,7 @@ function aws-ssh-copy-to
     publicIp=$(aws-ec2-get-ip ${1})
     LocalFile=${2}
     RemoteFile=${3}
-    scp ${SSH_PARAMETERS} ${LocalFile} ${SSH_USER}@${publicIp}:${RemoteFile}
+    scp ${SSH_PARAMETERS} ${LocalFile} ${AWS_SSH_USER}@${publicIp}:${RemoteFile}
 }
 
 # Copy specified file from instance to local
@@ -41,7 +41,7 @@ function aws-ssh-copy-from
     publicIp=$(aws-ec2-get-ip ${1})
     RemoteFile=${2}
     LocalFile=${3}
-    scp ${SSH_PARAMETERS} ${SSH_USER}@${publicIp}:${RemoteFile} ${LocalFile}
+    scp ${SSH_PARAMETERS} ${AWS_SSH_USER}@${publicIp}:${RemoteFile} ${LocalFile}
 }
 
 # Setup socks5 proxy
@@ -54,13 +54,13 @@ function aws-ssh-proxy
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
     publicIp=$(aws-ec2-get-ip ${1})
-    ProxyLocalPort=${2:-${PROXY_LOCAL_PORT}}
+    ProxyLocalPort=${2:-${AWS_PROXY_LOCAL_PORT}}
     ProxyRemotePort=22
     # Kill existing port forwarding process
     for pid in $(ps aux | grep "CfNgD ${ProxyLocalPort}" | grep -v grep | awk "{print \$2}"); do
         kill -9 ${pid}
     done
-    ssh ${SSH_PARAMETERS} -CfNgD ${ProxyLocalPort} -p ${ProxyRemotePort} ${SSH_USER}@${publicIp}
+    ssh ${SSH_PARAMETERS} -CfNgD ${ProxyLocalPort} -p ${ProxyRemotePort} ${AWS_SSH_USER}@${publicIp}
 }
 
 # Execute a command on all given instances parallelly
@@ -77,6 +77,6 @@ function aws-ssh-bulk-exec
     insNames=(`echo ${insNames}`)
     for ins in ${insNames}; do
         ip=$(aws-ec2-get-ip ${ins})
-        ssh ${SSH_PARAMETERS} ${SSH_USER}@${ip} sh -c "\"${cmdToExec}\""
+        ssh ${SSH_PARAMETERS} ${AWS_SSH_USER}@${ip} sh -c "\"${cmdToExec}\""
     done
 }

@@ -43,6 +43,6 @@ function _extract_info
 
 function _update_global_parameters
 {
-    BLOCK_DEVICE_MAPPINGS="{\"DeviceName\":\"/dev/${BOOT_DISK}\",\"Ebs\":{\"VolumeSize\":${DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}"
-    SSH_PARAMETERS=("-o" "UserKnownHostsFile /dev/null" "-o" "StrictHostKeyChecking no" "-i" "${SSH_KEY_PATH}")
+    BLOCK_DEVICE_MAPPINGS="{\"DeviceName\":\"/dev/${AWS_BOOT_DISK}\",\"Ebs\":{\"VolumeSize\":${AWS_DISK_SIZE_IN_GB},\"DeleteOnTermination\":true}}"
+    SSH_PARAMETERS=("-o" "UserKnownHostsFile /dev/null" "-o" "StrictHostKeyChecking no" "-i" "${AWS_SSH_KEY_PATH}")
 }

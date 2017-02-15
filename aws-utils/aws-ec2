@@ -22,13 +22,13 @@ function _aws_get_ins_id
 function _aws_create_instance
 {
     extraParams=
-    if [ "${USER_DATA_FILE}" != "" ]; then
-        extraParams=("--user-data" "file://${USER_DATA_FILE}" ${extraParams})
+    if [ "${AWS_USER_DATA_FILE}" != "" ]; then
+        extraParams=("--user-data" "file://${AWS_USER_DATA_FILE}" ${extraParams})
     fi
     insCount=${1}
-    aws ec2 run-instances --image-id ${IMG_ID} \
-        --security-group-ids ${SEC_GRP_ID} --count ${insCount} \
-        --instance-type ${INS_TYPE} --key-name ${SSH_KEY_NAME} \
+    aws ec2 run-instances --image-id ${AWS_IMG_ID} \
+        --security-group-ids ${AWS_SEC_GRP_ID} --count ${insCount} \
+        --instance-type ${AWS_INS_TYPE} --key-name ${AWS_SSH_KEY_NAME} \
         --query 'Instances[0].InstanceId' ${extraParams} \
         --block-device-mappings "${BLOCK_DEVICE_MAPPINGS}"
 }

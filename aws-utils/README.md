@@ -20,23 +20,23 @@ source ~/Scripts/aws-utils/init.sh
 ## Functions provided by these scripts
 
 ### aws-ec2.sh
-- aws-ec2-create
-- aws-ec2-bulk-create
-- aws-ec2-rename
-- aws-ec2-get-id
-- aws-ec2-get-ip
-- aws-ec2-get-name
-- aws-ec2-get-status
-- aws-ec2-start
-- aws-ec2-stop
-- aws-ec2-terminate
+- ec2-create
+- ec2-bulk-create
+- ec2-rename
+- ec2-get-id
+- ec2-get-ip
+- ec2-get-name
+- ec2-get-status
+- ec2-start
+- ec2-stop
+- ec2-terminate
 
 ### aws-ssh.sh
-- aws-ssh-to
-- aws-ssh-copy-from
-- aws-ssh-copy-to
-- aws-ssh-proxy
-- aws-ssh-bulk-exec
+- ec2-ssh-to
+- ec2-ssh-copy-from
+- ec2-ssh-copy-to
+- ec2-ssh-proxy
+- ec2-ssh-bulk-exec
 
 ### aws-account.sh
 - aws-account-list

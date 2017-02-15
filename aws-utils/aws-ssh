@@ -5,10 +5,10 @@
 # $1 - name of instance
 # [Return]
 # None
-function aws-ssh-to
+function ec2-ssh-to
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
-    publicIp=$(aws-ec2-get-ip ${1})
+    publicIp=$(ec2-get-ip ${1})
     ssh ${SSH_PARAMETERS} ${AWS_SSH_USER}@${publicIp}
 }
 
@@ -19,10 +19,10 @@ function aws-ssh-to
 # $3 - remote path
 # [Return]
 # None
-function aws-ssh-copy-to
+function ec2-ssh-copy-to
 {
     if [ "${3}" = "" ]; then echo "Need specify [instance name], [local file] and [remote file] ..."; return; fi
-    publicIp=$(aws-ec2-get-ip ${1})
+    publicIp=$(ec2-get-ip ${1})
     LocalFile=${2}
     RemoteFile=${3}
     scp ${SSH_PARAMETERS} ${LocalFile} ${AWS_SSH_USER}@${publicIp}:${RemoteFile}
@@ -35,10 +35,10 @@ function aws-ssh-copy-to
 # $3 - local path
 # [Return]
 # None
-function aws-ssh-copy-from
+function ec2-ssh-copy-from
 {
     if [ "${3}" = "" ]; then echo "Need specify [instance name], [remote file] and [local file] ..."; return; fi
-    publicIp=$(aws-ec2-get-ip ${1})
+    publicIp=$(ec2-get-ip ${1})
     RemoteFile=${2}
     LocalFile=${3}
     scp ${SSH_PARAMETERS} ${AWS_SSH_USER}@${publicIp}:${RemoteFile} ${LocalFile}
@@ -50,10 +50,10 @@ function aws-ssh-copy-from
 # $2 - proxy local port (optional)
 # [Return]
 # None
-function aws-ssh-proxy
+function ec2-ssh-proxy
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
-    publicIp=$(aws-ec2-get-ip ${1})
+    publicIp=$(ec2-get-ip ${1})
     ProxyLocalPort=${2:-${AWS_PROXY_LOCAL_PORT}}
     ProxyRemotePort=22
     # Kill existing port forwarding process
@@ -69,14 +69,14 @@ function aws-ssh-proxy
 # ${n} - command to execute
 # [Return]
 # Execute outputs
-function aws-ssh-bulk-exec
+function ec2-ssh-bulk-exec
 {
     if [ "${2}" = "" ]; then echo "Need at least an instance name/id and a comamnd ..."; return; fi
     cmdToExec=$(echo ${@[-1]})
     insNames=${@[@]:1:${#@[@]}-1}
     insNames=(`echo ${insNames}`)
     for ins in ${insNames}; do
-        ip=$(aws-ec2-get-ip ${ins})
+        ip=$(ec2-get-ip ${ins})
         ssh ${SSH_PARAMETERS} ${AWS_SSH_USER}@${ip} sh -c "\"${cmdToExec}\""
     done
 }

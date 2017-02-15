@@ -12,7 +12,7 @@ function _aws_get_ins_id
     if [ "$(_is_ins_id ${1})" = "${SUCCEED}" ]; then
         echo ${1}
     else
-        echo $(aws-ec2-get-id ${1})
+        echo $(ec2-get-id ${1})
     fi
 }
 
@@ -90,7 +90,7 @@ function _aws_ins_desc
 # ${1}...${n} - list of instance name/id (optional)
 # [Return]
 # List of instance IPs
-function aws-ec2-get-ip
+function ec2-get-ip
 {
     _aws_ins_desc_wrap 'PublicIpAddress' ${*}
 }
@@ -100,7 +100,7 @@ function aws-ec2-get-ip
 # ${1}...${n} - list of instance name/id (optional)
 # [Return]
 # List of instance IDs
-function aws-ec2-get-id
+function ec2-get-id
 {
     _aws_ins_desc_wrap 'InstanceId' ${*}
 }
@@ -110,7 +110,7 @@ function aws-ec2-get-id
 # ${1}...${n} - list instance name/id (optional)
 # [Return]
 # List of instance status
-function aws-ec2-get-status
+function ec2-get-status
 {
     _aws_ins_desc_wrap 'State.Name' ${*}
 }
@@ -120,7 +120,7 @@ function aws-ec2-get-status
 # ${1}...${n} - list of instance name/id (optional)
 # [Return]
 # List of instance names
-function aws-ec2-get-name
+function ec2-get-name
 {
     _aws_ins_desc_wrap 'Tags[*].Value' ${*}
 }
@@ -131,7 +131,7 @@ function aws-ec2-get-name
 # $2 - new name of the instance
 # [Return]
 # ID and new name of instance
-function aws-ec2-rename
+function ec2-rename
 {
     if [ "${2}" = "" ]; then echo "Need specify [instance id] and [instance new name] ..."; return; fi
     insId=$(_aws_get_ins_id ${1})
@@ -145,14 +145,14 @@ function aws-ec2-rename
 # $1 - name of instance
 # [Return]
 # ID of the new instance
-function aws-ec2-create
+function ec2-create
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name ..."; return; fi
     for i in ${@}; do
         insName=${i}
         insId=$(_aws_create_instance 1);
         insId=$(_extract_info ${insId})
-        aws-ec2-rename ${insId} ${insName}
+        ec2-rename ${insId} ${insName}
     done
 }
 
@@ -162,7 +162,7 @@ function aws-ec2-create
 # $2 - name prefix of instance
 # [Return]
 # IDs of the new instances
-function aws-ec2-bulk-create
+function ec2-bulk-create
 {
     if [ "${2}" = "" ]; then echo "Need specify [instance count] and [instance name prefix] ..."; return; fi
     insCount=${1}
@@ -174,7 +174,7 @@ function aws-ec2-bulk-create
     for id in ${insIds}; do
         index=$(_plus_one ${index})
         insName="${insNamePrefix}_${index}"
-        aws-ec2-rename ${id} ${insName}
+        ec2-rename ${id} ${insName}
     done
 }
 
@@ -183,7 +183,7 @@ function aws-ec2-bulk-create
 # ${1}...${n} - name/id list of instances
 # [Return]
 # Current status of specified instance
-function aws-ec2-start
+function ec2-start
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
     for ins in ${@}; do
@@ -196,7 +196,7 @@ function aws-ec2-start
 # ${1}...${n} - name/id list of instances
 # [Return]
 # Current status of specified instance
-function aws-ec2-stop
+function ec2-stop
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
     for ins in ${@}; do
@@ -209,7 +209,7 @@ function aws-ec2-stop
 # ${1}...${n} - name/id list of instances
 # [Return]
 # Current status of specified instance
-function aws-ec2-terminate
+function ec2-terminate
 {
     if [ "${1}" = "" ]; then echo "Need specify an instance name/id ..."; return; fi
     printf "All unsaved data will lost, sure terminate instances ? (N/Y) " 

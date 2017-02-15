@@ -3,7 +3,7 @@
 # Create the specified bucket
 # [Parameters]
 # None
-function aws-s3-md
+function s3-md
 {
     aws s3 mb s3://${AWS_S3_BUCKET} --region ${AWS_REGION}
 }
@@ -11,7 +11,7 @@ function aws-s3-md
 # Delete the specified bucket
 # [Parameters]
 # None
-function aws-s3-rb
+function s3-rb
 {
     aws s3 rb s3://${AWS_S3_BUCKET} --force
 }
@@ -22,7 +22,7 @@ function aws-s3-rb
 # Or
 # $1 - parameters: -r means 'recursive'
 # $2 - path to list
-function aws-s3-ls
+function s3-ls
 {
     if [ "${1}" = "-r" ]; then
         S3Param="--recursive"
@@ -38,7 +38,7 @@ function aws-s3-ls
 # [Parameters]
 # $1 - local path
 # $2 - s3 path
-function aws-s3-cp-to
+function s3-cp-to
 {
     LocalPath="${1}"
     S3Path="${2}"
@@ -54,7 +54,7 @@ function aws-s3-cp-to
 # [Parameters]
 # $1 - s3 path
 # $2 - local path
-function aws-s3-cp-from
+function s3-cp-from
 {
     S3Path="${1}"
     LocalPath="${2}"
@@ -70,7 +70,7 @@ function aws-s3-cp-from
 # [Parameters]
 # $1 - local path
 # $2 - s3 path
-function aws-s3-mv-to
+function s3-mv-to
 {
     LocalPath="${1}"
     S3Path="${2}"
@@ -85,7 +85,7 @@ function aws-s3-mv-to
 # [Parameters]
 # $1 - s3 path
 # $2 - local path
-function aws-s3-mv-from
+function s3-mv-from
 {
     S3Path="${1}"
     LocalPath="${2}"
@@ -101,7 +101,7 @@ function aws-s3-mv-from
 # [Parameters]
 # $1 - local path
 # $2 - s3 path
-function aws-s3-sync-to
+function s3-sync-to
 {
     LocalPath="${1}"
     S3Path="${2}"
@@ -113,7 +113,7 @@ function aws-s3-sync-to
 # [Parameters]
 # $1 - s3 path
 # $2 - local path
-function aws-s3-sync-from
+function s3-sync-from
 {
     S3Path="${1}"
     LocalPath="${2}"
@@ -124,7 +124,7 @@ function aws-s3-sync-from
 # Remove a file or folder
 # [Parameters]
 # $1 - path to remove
-function aws-s3-rm
+function s3-rm
 {
     S3Path="${1}"
     if [ "${S3Path}" = "" ]; then echo "Need specify a path ..."; return; fi
@@ -138,7 +138,7 @@ function aws-s3-rm
 # Publish a specified file for 1 day
 # [Parameters]
 # $1 - file to publish
-function aws-s3-presign-1-day
+function s3-presign-1-day
 {
     S3Path="${1}"
     if [ "${S3Path}" = "" ]; then echo "Need specify a path ..."; return; fi
@@ -149,7 +149,7 @@ function aws-s3-presign-1-day
 # [Parameters]
 # $1 - index html file path
 # $2 - error html file path
-function aws-s3-website
+function s3-website
 {
     IndexHtml="${1}"
     ErrorHtml="${2}"

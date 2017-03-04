@@ -23,6 +23,20 @@ function aws-region-list
 EOF
 }
 
+# Test access speed to all available regions
+function aws-region-speed
+{
+    regionName=(`aws-region-list | grep "[a-z]*-[a-z]*-[1-9]" | awk -F'|' '{print $2}' | sed 's/ /_/g'`)
+    regionCode=(`aws-region-list | grep -o "[a-z]*-[a-z]*-[1-9]"`)
+    postfix=".console.aws.amazon.com"
+    for i in `seq 1 ${#regionCode[@]}`; do
+        code=${regionCode[$i]}
+        time=`ping -c 1 ${code}${postfix} 2>&1 | grep -o '\(time=.*\|timeout\)'`
+        if [ "$time" = "" ]; then time="timeout"; fi
+        echo "${regionName[$i]} [$code] -> $time" | sed 's/_/ /g'
+    done
+}
+
 # Switch between regions
 # [Parameters]
 # $1 - target region code

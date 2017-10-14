@@ -63,7 +63,9 @@ function aws-profile-save-as
 # None
 function aws-profile-list
 {
-    ls ${PROFILE_FOLDER} | grep '\.profile$' | grep -o '^[^.]\+'
+    mask=${1}
+    if [ "${mask}" = "" ]; then mask='.*'; fi
+    ls ${PROFILE_FOLDER} | grep '\.profile$' | grep -o '^[^.]\+' | grep ${mask}
 }
 
 # Apply user profiles

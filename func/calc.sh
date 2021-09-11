@@ -28,6 +28,16 @@ function hex-to-dec()
     ((decNum=16#${1})); echo ${decNum}
 }
 
+# Time conversion
+function epoch-to-date()
+{
+    date -r ${1} +'%Y-%m-%d %H:%M:%S'
+}
+function date-to-epoch()
+{
+    date -j -f '%Y-%m-%d %H:%M:%S' "${*}" +'%s'
+}
+
 # Case conversion
 # capitalize all words
 function str-capital-all()

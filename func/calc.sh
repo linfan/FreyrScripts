@@ -31,7 +31,7 @@ function hex-to-dec()
 # Time conversion
 function epoch-to-date()
 {
-    date -r ${1} +'%Y-%m-%d %H:%M:%S'
+    date -r ${1: 0: 10} +'%Y-%m-%d %H:%M:%S'
 }
 function date-to-epoch()
 {

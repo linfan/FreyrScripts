@@ -5,15 +5,15 @@
 # Conversion of number system
 function bin-to-dec()
 {
-    ((decNum=2#${1})); echo ${decNum} 
+    echo $(echo $((2#${1})))
 }
 function bin-to-hex()
 {
-    dec-to-hex `bin-to-dec ${1}` 
+    echo $(echo "obase=16;$(echo $((2#${1})))"|bc)
 }
 function dec-to-bin()
-{ 
-    echo "obase=2;${1}" | bc 
+{
+    echo "obase=2;${1}" | bc
 }
 function dec-to-hex()
 {
@@ -21,11 +21,11 @@ function dec-to-hex()
 }
 function hex-to-bin()
 {
-    dec-to-bin `hex-to-dec ${1}`
+    echo $(echo "obase=2;$(echo "ibase=16;obase=1010;$(echo ${1}|tr '[a-f]' '[A-F]')"|bc)"|bc)
 }
 function hex-to-dec()
 {
-    ((decNum=16#${1})); echo ${decNum}
+    echo $(echo "ibase=16;obase=1010;$(echo ${1}|tr '[a-f]' '[A-F]')"|bc)
 }
 
 # Time conversion
